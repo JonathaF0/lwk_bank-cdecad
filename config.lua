@@ -4,7 +4,7 @@
 
 Config = {
     -- General -------------------------------------------------------------------
-    locale    = 'en',          -- file in locales/ (en, de, fr, es, pt-br, pl, nl, ...)
+    locale    = 'en',          -- a file in locales/ (see README > Language to add one)
     framework = 'auto',        -- auto | qbox | qb | esx
     inventory = 'auto',        -- auto | ox | qb | qs | none   (none = cards live only in the bank)
     target    = 'auto',        -- auto | ox | qb | none        (none = "Press E")
