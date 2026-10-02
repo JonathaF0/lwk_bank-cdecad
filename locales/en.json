@@ -86,7 +86,15 @@
     "err_loan_range": "%s loans run from $%s to $%s.",
     "err_loan_term": "Pick a repayment term.",
     "err_loan_limit": "That would put you over your borrowing limit.",
-    "err_loan_missing": "Loan not found."
+    "err_loan_missing": "Loan not found.",
+    "tx_bill": "Bill payment",
+    "receipt_bill": "Bill receipt",
+    "receipt_tx": "Bank receipt",
+    "err_bill_missing": "That bill is already paid or doesn't exist.",
+    "err_bill_none": "You have no unpaid bills.",
+    "err_receipt_inventory": "Receipts need an inventory resource on this server.",
+    "err_receipt_missing": "Nothing to print for that.",
+    "err_receipt_space": "No space in your inventory for the receipt."
   },
   "ui": {}
 }

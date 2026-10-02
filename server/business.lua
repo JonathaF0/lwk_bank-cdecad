@@ -48,12 +48,13 @@ local function jobAccount(job)
     return row
 end
 
-exports('AddBusinessMoney', function(job, amount, reason)
+function Business.addToJob(job, amount, reason)
     local row, amt = jobAccount(job), Logic.amount(amount)
     if not row or not amt or not Business.add(row, amt) then return false end
     Accounts.log(row.id, 'deposit', amt, Logic.text(reason, 1, 64) or L('tx_deposit'))
     return true
-end)
+end
+exports('AddBusinessMoney', Business.addToJob)
 
 exports('RemoveBusinessMoney', function(job, amount, reason)
     local row, amt = jobAccount(job), Logic.amount(amount)

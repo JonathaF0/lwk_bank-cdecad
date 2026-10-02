@@ -27,6 +27,7 @@ server_scripts {
   'server/settings.lua',
   'bridge/framework.lua',
   'bridge/inventory.lua',
+  'bridge/billing.lua',
   'server/logic.lua',
   'server/logs.lua',
   'server/business.lua',
@@ -36,6 +37,7 @@ server_scripts {
   'server/cards.lua',
   'server/savings.lua',
   'server/loans.lua',
+  'server/bills.lua',
 }
 
 client_scripts {
