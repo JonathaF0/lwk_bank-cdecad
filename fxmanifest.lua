@@ -41,6 +41,7 @@ server_scripts {
   'server/loans.lua',
   'server/bills.lua',
   'server/admin.lua',
+  'server/compat.lua',
 }
 
 client_scripts {
@@ -52,3 +53,10 @@ dependencies {
   'ox_lib',
   'oxmysql',
 }
+
+-- Drop-in replacement: scripts that depend on or call these banks get LWK Bank instead
+-- (server/compat.lua answers their exports). Remove the original resources.
+provide 'Renewed-Banking'
+provide 'qb-banking'
+provide 'qb-management'
+provide 'okokBanking'
