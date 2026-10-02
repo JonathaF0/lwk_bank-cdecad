@@ -28,9 +28,13 @@ function Bills.forPlayer(_, identifier)
 end
 
 local function payOne(src, identifier, row, bill)
-    if not Accounts.debit(row, bill.amount, src) then return false end
-    Billing.settle(bill.id)
-    Billing.payout(bill)
+    if bill.payTo.jg then
+        if not Billing.payFinance(src, row, bill) then return false end
+    else
+        if not Accounts.debit(row, bill.amount, src) then return false end
+        Billing.settle(bill.id)
+        Billing.payout(bill)
+    end
     Accounts.log(row.id, 'bill', bill.amount, bill.label ~= '' and bill.label or L('tx_bill'), bill.issuer)
     MySQL.insert.await('INSERT INTO lwk_bank_bill_history (identifier, label, issuer, amount, issued_at, paid_at) VALUES (?, ?, ?, ?, ?, ?)',
         { identifier, bill.label, bill.issuer, bill.amount, bill.issuedAt, Logic.now() })

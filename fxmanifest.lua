@@ -43,6 +43,7 @@ server_scripts {
   'server/admin.lua',
   'server/compat.lua',
   'server/import.lua',
+  'server/integrations.lua',
 }
 
 client_scripts {

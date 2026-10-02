@@ -48,7 +48,38 @@ function Billing.unpaid(identifier)
                 amount = b.amount, issuedAt = Logic.now(), payTo = { job = b.society } }
         end
     end
+    -- jg-dealerships: each financed vehicle's next payment is a bill.
+    if started('jg-dealerships') then
+        local ok, vehicles = pcall(function() return exports['jg-dealerships']:getPlayerFinancedVehicles(identifier) end)
+        for _, v in ipairs(ok and type(vehicles) == 'table' and vehicles or {}) do
+            local f = type(v.finance_data) == 'string' and json.decode(v.finance_data) or v.finance_data or {}
+            local amount = math.floor(tonumber(f.recurring_payment) or 0)
+            if amount > 0 then
+                out[#out + 1] = { id = 'jg:' .. v.plate, amount = amount, issuedAt = Logic.now(), payTo = { jg = v.plate },
+                    label = L('bill_finance', v.plate, (tonumber(f.payments_complete) or 0) + 1, f.total_payments or '?'), issuer = L('bill_finance_issuer') }
+            end
+        end
+    end
     return out
+end
+
+--- Pays a jg-dealerships finance bill. jg takes the payment from the player's bank money
+--- itself, so money from any other LWK account is moved there first (and back on failure).
+function Billing.payFinance(src, row, bill)
+    local moved = row.is_default ~= 1
+    if moved then
+        if not Accounts.debit(row, bill.amount, src) then return false end
+        Bridge.addMoney(src, 'bank', bill.amount, 'lwk_bank finance')
+    elseif Bridge.getMoney(src, 'bank') < bill.amount then
+        return false
+    end
+    local ok, paid = pcall(function() return exports['jg-dealerships']:makeFinancePayment(src, bill.payTo.jg) end)
+    if ok and paid then return true end
+    if moved then
+        Bridge.removeMoney(src, 'bank', bill.amount, 'lwk_bank finance')
+        Accounts.credit(row, bill.amount)
+    end
+    return false
 end
 
 --- Marks a bill settled in the billing resource's own table.
