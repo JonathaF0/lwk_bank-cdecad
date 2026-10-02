@@ -90,7 +90,7 @@ Everything is detected automatically. Each one can also be forced in `config/con
 
 ## Installation
 
-1. **Download** the latest release and put the folder in your `resources`. Name the folder **`lwk_bank`**: no spaces, and not `lwk_bank-main`. Other scripts use that name to call its exports.
+1. **Download** `lwk_bank.zip` from the [latest release](https://github.com/lwkjacob/lwk_bank/releases/latest) and extract the `lwk_bank` folder into your `resources`. Keep the folder name **`lwk_bank`** (if you download the source code instead, rename `lwk_bank-main`). Other scripts use that name to call its exports.
 2. **Start it after** your framework, ox_lib, oxmysql, target and inventory, in `server.cfg`:
    ```cfg
    ensure ox_lib
