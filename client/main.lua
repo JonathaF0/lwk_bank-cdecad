@@ -40,7 +40,7 @@ function OpenBank(mode)
     if isOpen then return false end
     local data = lib.callback.await('lwk_bank:open', false, mode)
     if not data then
-        lib.notify({ title = bankName(), description = L('err_not_here'), type = 'error' })
+        Notify(L('err_not_here'), 'error')
         return false
     end
     isOpen = true
@@ -59,7 +59,7 @@ RegisterNetEvent('lwk_bank:incoming', function(amount, from)
     if isOpen then
         SendNUIMessage({ action = 'incoming', amount = amount, from = from })
     else
-        lib.notify({ title = bankName(), description = L('incoming', amount, from), type = 'success' })
+        Notify(L('incoming', amount, from), 'success')
     end
 end)
 

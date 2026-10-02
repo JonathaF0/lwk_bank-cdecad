@@ -21,6 +21,7 @@ shared_scripts {
   '@ox_lib/init.lua',
   'config.lua',
   'shared/locale.lua',
+  'bridge/notify.lua',
 }
 
 server_scripts {

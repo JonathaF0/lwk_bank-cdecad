@@ -166,7 +166,7 @@ function Bridge.isAdmin(src)
 end
 
 function Bridge.notify(src, message, kind)
-    TriggerClientEvent('ox_lib:notify', src, { title = Cfg().bankName, description = message, type = kind or 'inform' })
+    Notify(src, message, kind)
 end
 
 if fw == 'none' then

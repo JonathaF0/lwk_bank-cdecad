@@ -9,6 +9,7 @@ Config = {
     inventory = 'auto',        -- auto | ox | qb | qs | none   (none = cards live only in the bank)
     target    = 'auto',        -- auto | ox | qb | none        (none = "Press E")
     billing   = 'auto',        -- auto | okok | esx | qb | none
+    notify    = 'auto',        -- auto | ox | okok | wasabi | esx | qb   (auto = okokNotify/wasabi_notify if running, else ox_lib)
     debug     = false,         -- adds /bank and /atm test commands
 
     -- Branding --------------------------------------------------------------------
