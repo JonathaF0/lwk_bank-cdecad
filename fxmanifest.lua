@@ -35,6 +35,7 @@ server_scripts {
   'server/manage.lua',
   'server/cards.lua',
   'server/savings.lua',
+  'server/loans.lua',
 }
 
 client_scripts {

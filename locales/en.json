@@ -75,7 +75,18 @@
     "err_savings_funds": "Not enough in savings.",
     "err_goal_limit": "An account can have %s goals at most.",
     "err_goal_missing": "Goal not found.",
-    "err_goal_funds": "The goal holds less than that."
+    "err_goal_funds": "The goal holds less than that.",
+    "tx_loan": "%s loan",
+    "tx_loan_payment": "Loan repayment",
+    "loan_grace": "A loan payment failed. Pay within %s hours to avoid a late fee.",
+    "loan_late": "A loan payment is late. A $%s fee was added and your credit score dropped.",
+    "err_perm_loans": "You can't take loans on this account.",
+    "err_loan_max": "You can have %s active loans at most.",
+    "err_loan_plan": "Unknown loan plan.",
+    "err_loan_range": "%s loans run from $%s to $%s.",
+    "err_loan_term": "Pick a repayment term.",
+    "err_loan_limit": "That would put you over your borrowing limit.",
+    "err_loan_missing": "Loan not found."
   },
   "ui": {}
 }
