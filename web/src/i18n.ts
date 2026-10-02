@@ -1,4 +1,5 @@
-import en from '../../config/locales/en.json';
+// Named import: only the "ui" section is bundled, not the server messages.
+import { ui as enUi } from '../../config/locales/en.json';
 
 /* UI strings come from config/locales/<code>.json -> "ui". The server sends the active
  * language with the bank data; anything missing falls back to the bundled English,
@@ -7,7 +8,7 @@ import en from '../../config/locales/en.json';
 export type Strings = Record<string, string>;
 export type T = (key: string, vars?: Record<string, string | number>) => string;
 
-const FALLBACK: Strings = en.ui;
+const FALLBACK: Strings = enUi;
 
 export function makeT(strings?: Strings): T {
   const s = { ...FALLBACK, ...(strings ?? {}) };
