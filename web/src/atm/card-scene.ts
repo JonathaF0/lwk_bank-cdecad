@@ -163,6 +163,8 @@ function drawFace(card: Card, bankName: string, accent: string, back: boolean) {
 
 export interface CardScene {
   setCard(card: Card): void;
+  /** Pause/resume rendering, e.g. while the Cards tab is out of view. */
+  setRunning(on: boolean): void;
   flip(): void;
   insert(): Promise<void>;
   dispose(): void;
@@ -251,7 +253,11 @@ export async function createCardScene(canvas: HTMLCanvasElement, card: Card, ban
   ro.observe(canvas);
   resize();
 
+  // Compile every shader now, not on the first visible frame.
+  renderer.compile(scene, camera);
+
   let floating = true;
+  let running = true;
   let raf = 0;
   const clock = new THREE.Clock();
   const loop = () => {
@@ -271,6 +277,12 @@ export async function createCardScene(canvas: HTMLCanvasElement, card: Card, ban
   gsap.from(body.position, { y: -1.5, duration: 1.4, ease: 'expo.out' });
 
   return {
+    setRunning(on) {
+      if (on === running) return;
+      running = on;
+      cancelAnimationFrame(raf);
+      if (on) loop();
+    },
     setCard(c) {
       gsap
         .timeline()

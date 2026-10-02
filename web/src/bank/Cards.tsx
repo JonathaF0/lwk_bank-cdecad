@@ -20,6 +20,26 @@ export function Cards({ active, accountId, setAccountId }: SectionProps) {
     if (card && card.id !== cardId) setCardId(card.id);
   }, [card, cardId]);
 
+  // Building the WebGL card is the expensive part (renderer, lighting, shaders), so do it
+  // once: when the bank is idle after opening, or right after the carousel lands here.
+  // After that it stays alive and only pauses while another tab is in front.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (ready) return;
+    const go = () => setReady(true);
+    if (active) {
+      const id = setTimeout(go, 700);
+      return () => clearTimeout(id);
+    }
+    // Not during the ~1.5s opening animation.
+    let idle = 0;
+    const wait = setTimeout(() => (idle = requestIdleCallback(go, { timeout: 3000 })), 2000);
+    return () => {
+      clearTimeout(wait);
+      cancelIdleCallback(idle);
+    };
+  }, [active, ready]);
+
   const activeCount = data.cards.filter((c) => c.status === 'active').length;
   const full = data.cards.length >= cfg.cards.maxCards;
 
@@ -28,8 +48,7 @@ export function Cards({ active, accountId, setAccountId }: SectionProps) {
       <div className="cards-main">
         <div className="cards-stage" data-reveal>
           {card ? (
-            // WebGL only while this panel is in front.
-            active ? <Card3D card={card} bankName={cfg.bankName} accent={cfg.accent} /> : null
+            ready ? <Card3D card={card} bankName={cfg.bankName} accent={cfg.accent} running={active} /> : null
           ) : (
             <div className="empty-state">
               <Icon name="card" size={2} />

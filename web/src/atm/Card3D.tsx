@@ -7,19 +7,25 @@ export interface Card3DHandle {
 }
 
 /** Click to flip, move the pointer to tilt. three.js is fetched on first mount only. */
-export const Card3D = forwardRef<Card3DHandle, { card: Card; bankName: string; accent: string }>(function Card3D({ card, bankName, accent }, ref) {
+export const Card3D = forwardRef<Card3DHandle, { card: Card; bankName: string; accent: string; running?: boolean }>(function Card3D({ card, bankName, accent, running = true }, ref) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const scene = useRef<CardScene | null>(null);
   // Repaint when the card or anything printed on it changes (e.g. a renewal moves the expiry).
   const face = `${card.id}:${card.expiresAt}:${card.holder}`;
   const shown = useRef(face);
   const [failed, setFailed] = useState(false);
+  const runningRef = useRef(running);
+  runningRef.current = running;
 
   useEffect(() => {
     let dead = false;
     import('./card-scene')
       .then(({ createCardScene }) => createCardScene(canvas.current!, card, bankName, accent))
-      .then((s) => (dead ? s.dispose() : (scene.current = s)))
+      .then((s) => {
+        if (dead) return s.dispose();
+        scene.current = s;
+        s.setRunning(runningRef.current);
+      })
       .catch(() => !dead && setFailed(true));
     return () => {
       dead = true;
@@ -28,6 +34,10 @@ export const Card3D = forwardRef<Card3DHandle, { card: Card; bankName: string; a
     };
     // The scene is created once; card changes go through setCard below.
   }, []);
+
+  useEffect(() => {
+    scene.current?.setRunning(running);
+  }, [running]);
 
   useEffect(() => {
     if (scene.current && shown.current !== face) scene.current.setCard(card);
