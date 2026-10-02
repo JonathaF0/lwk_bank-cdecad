@@ -42,6 +42,7 @@ server_scripts {
   'server/bills.lua',
   'server/admin.lua',
   'server/compat.lua',
+  'server/import.lua',
 }
 
 client_scripts {

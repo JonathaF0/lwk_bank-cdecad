@@ -116,7 +116,17 @@
     "admin_pin_offline": "Player is offline. New PIN: %s",
     "admin_done": "Done.",
     "err_config_field": "That value isn't valid: %s",
-    "cmd_config_help": "Open the in-game bank settings"
+    "cmd_config_help": "Open the in-game bank settings",
+    "import_tx": "Imported balance",
+    "cmd_import_help": "Import balances from another bank (Renewed-Banking, qb-banking, qb-management, okokBanking)",
+    "import_unknown": "Unknown source. Use: renewed, qb, qbmanagement or okok.",
+    "import_already": "%s was already imported (%s). Add 'force' to import again.",
+    "import_no_tables": "No %s tables found in this database.",
+    "import_preview": "Preview of the %s import (nothing changed yet):",
+    "import_doing": "Importing from %s:",
+    "import_total": "Total: %s accounts, $%s",
+    "import_how": "Run '/bankimport %s confirm' to import. Leave out a type with skip=type1,type2.",
+    "import_result": "Done: %s imported, %s empty society accounts skipped, %s failed (see server console)."
   },
   "ui": {
     "section_overview": "Overview",
