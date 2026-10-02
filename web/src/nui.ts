@@ -247,9 +247,33 @@ export interface AdminConfig {
   accent: string;
 }
 
+/** A printed receipt item's details (server/bills.lua -> receiptPrint). */
+export interface Receipt {
+  title?: string;
+  ref?: string;
+  amount?: number;
+  incoming?: boolean;
+  label?: string;
+  party?: string;
+  at?: number;
+  account?: string;
+  iban?: string;
+  bank?: string;
+}
+
+/** What the receipt view needs without any bank data loaded. */
+export interface ReceiptView {
+  ui?: Record<string, string>;
+  intl?: string;
+  currency?: string;
+  bankName?: string;
+  accent?: string;
+}
+
 export type NuiMessage =
   | { action: 'open' | 'openAtm' | 'update'; data: BankData }
   | { action: 'openConfig'; config: AdminConfig }
+  | { action: 'receipt'; receipt: Receipt; view: ReceiptView }
   | { action: 'close' }
   | { action: 'incoming'; amount: number; from: string };
 

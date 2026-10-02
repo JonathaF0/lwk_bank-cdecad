@@ -20,12 +20,24 @@ interface BankCtx {
 
 const Ctx = createContext<BankCtx | null>(null);
 
-function safeLocale(l?: string) {
+export function safeLocale(l?: string) {
   try {
     return Intl.NumberFormat.supportedLocalesOf(l ?? '').length ? l! : 'en-US';
   } catch {
     return 'en-US';
   }
+}
+
+/** Whole-unit currency formatter; "+" only when asked, "−" for negatives. */
+export function moneyFormat(locale: string, currency = 'USD') {
+  let f: Intl.NumberFormat;
+  try {
+    f = new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 0 });
+  } catch {
+    // A typo'd currency code in config.lua shouldn't take the whole UI down.
+    f = new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+  }
+  return (n: number, opts?: { sign?: boolean }) => (opts?.sign && n > 0 ? '+' : n < 0 ? '−' : '') + f.format(Math.abs(n));
 }
 
 export function BankProvider({ data, setData, children }: { data: BankData; setData: (d: BankData) => void; children: ReactNode }) {
@@ -43,16 +55,7 @@ export function BankProvider({ data, setData, children }: { data: BankData; setD
 
   const currency = data.config.currency;
   const locale = safeLocale(data.config.locale);
-  const money = useMemo(() => {
-    let f: Intl.NumberFormat;
-    try {
-      f = new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 0 });
-    } catch {
-      // A typo'd currency code in config.lua shouldn't take the whole UI down.
-      f = new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-    }
-    return (n: number, opts?: { sign?: boolean }) => (opts?.sign && n > 0 ? '+' : n < 0 ? '−' : '') + f.format(Math.abs(n));
-  }, [currency, locale]);
+  const money = useMemo(() => moneyFormat(locale, currency), [currency, locale]);
 
   const t = useMemo(() => makeT(data.ui), [data.ui]);
 

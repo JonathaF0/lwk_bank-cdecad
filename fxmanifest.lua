@@ -14,6 +14,7 @@ files {
   'html/assets/*',
   'html/sounds/*',
   'locales/*.json',
+  'images/*.png',
 }
 
 shared_scripts {

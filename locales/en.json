@@ -477,6 +477,14 @@
     "cfg_add_here_banks": "Add bank here",
     "cfg_add_here_atmSpots": "Add ATM here",
     "cfg_atmSpots": "ATM spots",
-    "cfg_hint_atmSpots": "ATMs built into a building (not a prop) can't be found by model. Stand at one and press Add ATM here"
+    "cfg_hint_atmSpots": "ATMs built into a building (not a prop) can't be found by model. Stand at one and press Add ATM here",
+    "receipt_date": "Date",
+    "receipt_time": "Time",
+    "receipt_ref": "Ref",
+    "receipt_iban": "IBAN",
+    "receipt_party": "With",
+    "receipt_total": "Total",
+    "receipt_thanks": "Thank you for banking with {bank}",
+    "receipt_hint": "Click anywhere or press Esc to put it away"
   }
 }

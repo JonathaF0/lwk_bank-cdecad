@@ -65,3 +65,15 @@ function Inv.removeCard(src, item, cardId)
     end
     return false
 end
+
+--- Calls fn(src, metadata) when a player uses `item`. ox_inventory instead calls the
+--- client export named in the item definition (client.export = 'lwk_bank.useReceipt').
+function Inv.onUse(item, fn)
+    if kind == 'qs' then
+        exports['qs-inventory']:CreateUsableItem(item, function(src, data) fn(src, data and (data.info or data.metadata)) end)
+    elseif kind == 'qb' and started('qb-core') then
+        exports['qb-core']:GetCoreObject().Functions.CreateUseableItem(item, function(src, data)
+            fn(src, data and (data.info or data.metadata))
+        end)
+    end
+end

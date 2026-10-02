@@ -79,6 +79,23 @@ RegisterNetEvent('lwk_bank:openConfig', function(data)
     SetNuiFocus(true, true)
 end)
 
+-- Using a receipt item: show the printed receipt. Old receipts without details still
+-- show their label/description.
+local function showReceipt(metadata)
+    if isOpen or type(metadata) ~= 'table' then return end
+    local world = GlobalState.lwk_bank_world or Config
+    isOpen = true
+    SendNUIMessage({
+        action = 'receipt',
+        receipt = metadata.receipt or { title = metadata.label, label = metadata.description },
+        view = { ui = Locale.ui(), intl = Locale.intl(), currency = world.currency, bankName = world.bankName, accent = world.accent },
+    })
+    SetNuiFocus(true, true)
+end
+RegisterNetEvent('lwk_bank:showReceipt', showReceipt)
+-- ox_inventory: client = { export = 'lwk_bank.useReceipt' } on the item.
+exports('useReceipt', function(_, slot) showReceipt(slot and slot.metadata) end)
+
 -- "Add bank here" in the editor: where the admin is standing.
 RegisterNUICallback('adminHere', function(_, cb)
     local pos = GetEntityCoords(cache.ped)

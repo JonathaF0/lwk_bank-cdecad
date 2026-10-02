@@ -76,11 +76,14 @@ local function receiptFor(src, identifier, kind, id)
     if kind == 'bill' then
         local h = MySQL.single.await('SELECT * FROM lwk_bank_bill_history WHERE id = ? AND identifier = ?',
             { tonumber(tostring(id):gsub('^h', '')), identifier })
-        return h and { title = L('receipt_bill'), amount = h.amount, label = h.label, party = h.issuer, at = h.paid_at }
+        return h and { title = L('receipt_bill'), ref = 'B' .. h.id, amount = h.amount, incoming = false, label = h.label,
+            party = h.issuer, at = h.paid_at }
     end
     local tx = MySQL.single.await('SELECT * FROM lwk_bank_transactions WHERE id = ?', { tonumber(id) })
-    if not tx or not Accounts.open(src, identifier, tx.account_id) then return nil end
-    return { title = L('receipt_tx'), amount = tx.amount, label = tx.label, party = tx.counterparty or '', at = tx.created_at }
+    local acc = tx and Accounts.open(src, identifier, tx.account_id)
+    if not acc then return nil end
+    return { title = L('receipt_tx'), ref = 'T' .. tx.id, amount = tx.amount, incoming = Logic.isIncoming(tx.type),
+        type = tx.type, label = tx.label, party = tx.counterparty or '', at = tx.created_at, account = acc.name, iban = acc.iban }
 end
 
 Bank.action('receiptPrint', function(src, identifier, p)
@@ -89,10 +92,18 @@ Bank.action('receiptPrint', function(src, identifier, p)
     local r = receiptFor(src, identifier, p.kind, p.id)
     if not r then return fail(L('err_receipt_missing')) end
     local when = os.date('%Y-%m-%d %H:%M', math.floor(r.at / 1000))
+    r.bank = Cfg().bankName
     local metadata = {
         label = ('%s · $%s'):format(r.title, r.amount),
-        description = ('%s · $%s%s · %s · %s'):format(r.label, r.amount, r.party ~= '' and (' · ' .. r.party) or '', when, Cfg().bankName),
+        description = ('%s · $%s%s · %s · %s'):format(r.label, r.amount, r.party ~= '' and (' · ' .. r.party) or '', when, r.bank),
+        receipt = r, -- read by the receipt view when the item is used
     }
     if not Inv.give(src, Cfg().receipts.item, metadata) then return fail(L('err_receipt_space')) end
     return ok(src)
+end)
+
+-- Using a receipt item shows it. ox_inventory calls the client export from the item
+-- definition (see README); qb/qs inventories register it as a usable item here.
+Inv.onUse(Cfg().receipts.item, function(src, metadata)
+    TriggerClientEvent('lwk_bank:showReceipt', src, metadata or {})
 end)

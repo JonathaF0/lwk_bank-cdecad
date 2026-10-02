@@ -15,6 +15,17 @@ export function DevBar() {
       <button onClick={() => send({ action: 'openAtm', data: getMockData() })}>ATM</button>
       <button onClick={() => send({ action: 'openConfig', config: getMockAdmin() })}>Config</button>
       <button
+        onClick={() =>
+          send({
+            action: 'receipt',
+            receipt: { title: 'Bank receipt', ref: 'T1042', amount: 640, incoming: false, label: 'Los Santos Customs', party: 'Los Santos Customs', at: Date.now(), account: 'Everyday', iban: 'LW204118', bank: 'LWK Bank' },
+            view: { intl: 'en-US', currency: 'USD', bankName: 'LWK Bank', accent: '#c8f031' },
+          })
+        }
+      >
+        Receipt
+      </button>
+      <button
         onClick={() => {
           send({ action: 'update', data: simulateIncoming() });
           send({ action: 'incoming', amount: 750, from: 'Yusuf Adebayo' });

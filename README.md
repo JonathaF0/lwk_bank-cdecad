@@ -52,29 +52,33 @@ That's it. Join the server, walk up to a bank counter or ATM, and press the targ
 
 ### Items
 
-Images are not included. Use any 100×100 PNG named `bank_card.png` / `bank_receipt.png` in your inventory's image folder.
+Item images are in `images/` (`bank_card.png`, `bank_receipt.png`). ox_inventory loads them straight from this resource. For qb/qs, copy them into your inventory's image folder (`qb-inventory/html/images`, `qs-inventory/html/images`).
+
+**Using a receipt** opens it as a printed slip showing the date, account, amount and reference.
 
 **ox_inventory** (also used by Qbox): `ox_inventory/data/items.lua`
 ```lua
 ['bank_card'] = {
     label = 'Bank Card', weight = 10, stack = false, close = true,
     description = 'A debit card. Use it at any ATM.',
+    client = { image = 'nui://lwk_bank/images/bank_card.png' },
 },
 ['bank_receipt'] = {
-    label = 'Bank Receipt', weight = 1, stack = false,
+    label = 'Bank Receipt', weight = 1, stack = false, close = true,
+    client = { image = 'nui://lwk_bank/images/bank_receipt.png', export = 'lwk_bank.useReceipt' },
 },
 ```
 
 **qb-inventory**: `qb-core/shared/items.lua`
 ```lua
 bank_card    = { name = 'bank_card',    label = 'Bank Card',    weight = 10, type = 'item', image = 'bank_card.png',    unique = true, useable = false, shouldClose = true, description = 'A debit card. Use it at any ATM.' },
-bank_receipt = { name = 'bank_receipt', label = 'Bank Receipt', weight = 1,  type = 'item', image = 'bank_receipt.png', unique = true, useable = false, shouldClose = true, description = 'A bank receipt.' },
+bank_receipt = { name = 'bank_receipt', label = 'Bank Receipt', weight = 1,  type = 'item', image = 'bank_receipt.png', unique = true, useable = true, shouldClose = true, description = 'A bank receipt.' },
 ```
 
 **qs-inventory**: `qs-inventory/shared/items.lua`
 ```lua
 ['bank_card']    = { ['name'] = 'bank_card',    ['label'] = 'Bank Card',    ['weight'] = 10, ['type'] = 'item', ['image'] = 'bank_card.png',    ['unique'] = true, ['useable'] = false, ['shouldClose'] = true, ['description'] = 'A debit card. Use it at any ATM.' },
-['bank_receipt'] = { ['name'] = 'bank_receipt', ['label'] = 'Bank Receipt', ['weight'] = 1,  ['type'] = 'item', ['image'] = 'bank_receipt.png', ['unique'] = true, ['useable'] = false, ['shouldClose'] = true, ['description'] = 'A bank receipt.' },
+['bank_receipt'] = { ['name'] = 'bank_receipt', ['label'] = 'Bank Receipt', ['weight'] = 1,  ['type'] = 'item', ['image'] = 'bank_receipt.png', ['unique'] = true, ['useable'] = true, ['shouldClose'] = true, ['description'] = 'A bank receipt.' },
 ```
 
 When a card is ordered, the player gets the item. At an ATM they can only use cards they're carrying. With no inventory (`inventory = 'none'`), cards live only in the bank app and ATMs show all of them.
