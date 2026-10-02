@@ -62,7 +62,7 @@ local function validate(values)
     if not clean then return nil, bad end
     bad = Logic.checkConfig(clean)
     if bad then return nil, bad end
-    if clean.locale ~= 'en' and not LoadResourceFile(GetCurrentResourceName(), ('locales/%s.json'):format(clean.locale)) then
+    if clean.locale ~= 'en' and not LoadResourceFile(GetCurrentResourceName(), ('config/locales/%s.json'):format(clean.locale)) then
         return nil, 'locale'
     end
     return clean

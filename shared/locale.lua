@@ -1,10 +1,10 @@
--- Locale loader shared by server and client. Strings live in locales/<code>.json:
+-- Locale loader shared by server and client. Strings live in config/locales/<code>.json:
 --   "server": messages sent from Lua (notifications, errors)
 --   "ui":     every string the NUI shows (passed to the UI with the bank data)
 -- Missing keys fall back to English, then to the key itself.
 
 local function load(code)
-    local raw = LoadResourceFile(GetCurrentResourceName(), ('locales/%s.json'):format(code))
+    local raw = LoadResourceFile(GetCurrentResourceName(), ('config/locales/%s.json'):format(code))
     return raw and json.decode(raw) or nil
 end
 

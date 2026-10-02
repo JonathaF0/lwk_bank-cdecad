@@ -1,4 +1,4 @@
--- Pure helpers: no natives, no database. Unit-tested by tests/logic.test.mjs.
+-- Pure helpers: no natives, no database.
 
 Logic = {}
 

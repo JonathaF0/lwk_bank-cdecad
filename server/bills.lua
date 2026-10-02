@@ -1,4 +1,4 @@
--- Bills (via bridge/billing.lua) and printed receipts (inventory items).
+-- Bills (via config/bridge/billing.lua) and printed receipts (inventory items).
 
 Bills = {}
 

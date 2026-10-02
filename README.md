@@ -17,19 +17,19 @@ Works with **Qbox, QBCore and ESX** (detected automatically).
 - **Notifications** through ox_lib, okokNotify, wasabi_notify, or the ESX / QBCore / Qbox built-ins.
 - **Logs** to a Discord webhook and/or ox_lib's logger. Big amounts are flagged.
 - **Admin tools**: `/bankconfig` (in-game settings), plus commands to look up players, reset PINs, unfreeze cards and set credit scores.
-- **Translations**: every string lives in `locales/<code>.json`, and dates and money use the language's own formats.
+- **Translations**: every string lives in `config/locales/<code>.json`, and dates and money use the language's own formats.
 - **Sounds**: short, quiet, realistic (CC0). They can be turned off or replaced.
 
 ## Compatibility
 
-Everything is detected automatically. Each one can also be forced in `config.lua`.
+Everything is detected automatically. Each one can also be forced in `config/config.lua`.
 
 | Frameworks | Status | Notes |
 | --- | :---: | --- |
 | qbox | ✅ | |
 | qb-core | ✅ | |
 | esx | ✅ | |
-| custom | ⚠️ | Requires manual implementation (`bridge/framework.lua`) |
+| custom | ⚠️ | Requires manual implementation (`config/bridge/framework.lua`) |
 
 | Interactions | Status | Notes |
 | --- | :---: | --- |
@@ -44,7 +44,7 @@ Everything is detected automatically. Each one can also be forced in `config.lua
 | qb-inventory | ✅ | Cards and receipts as items |
 | qs-inventory | ✅ | Cards and receipts as items |
 | none | ✅ | Cards live in the bank app only |
-| custom | ⚠️ | Requires manual implementation (`bridge/inventory.lua`) |
+| custom | ⚠️ | Requires manual implementation (`config/bridge/inventory.lua`) |
 
 | Notifications | Status | Notes |
 | --- | :---: | --- |
@@ -53,14 +53,14 @@ Everything is detected automatically. Each one can also be forced in `config.lua
 | qb | ✅ | Uses qbx_core's on Qbox |
 | okok | ✅ | okokNotify |
 | wasabi_notify | ✅ | |
-| custom | ⚠️ | Requires manual implementation (`bridge/notify.lua`) |
+| custom | ⚠️ | Requires manual implementation (`config/bridge/notify.lua`) |
 
 | Billing | Status | Notes |
 | --- | :---: | --- |
 | okokBilling | ✅ | Unpaid invoices under Bills |
 | esx_billing | ✅ | Unpaid invoices under Bills |
 | qb (phone invoices) | ✅ | Unpaid invoices under Bills |
-| custom | ⚠️ | Requires manual implementation (`bridge/billing.lua`) |
+| custom | ⚠️ | Requires manual implementation (`config/bridge/billing.lua`) |
 
 | Banking | Status | Notes |
 | --- | :---: | --- |
@@ -100,7 +100,7 @@ Everything is detected automatically. Each one can also be forced in `config.lua
    ```cfg
    add_ace group.admin lwk_bank.admin allow
    ```
-   On ESX, the `admin` and `superadmin` groups also work (see `admin.esxGroups` in `config.lua`).
+   On ESX, the `admin` and `superadmin` groups also work (see `admin.esxGroups` in `config/config.lua`).
 4. **Add the items** (skip this if you don't use an inventory). See [Items](#items) below.
 5. **Remove your old bank** so two banks don't fight over the same counters and exports. Coming from Renewed-Banking, qb-banking, qb-management or okokBanking? Other scripts that call its exports keep working with LWK Bank, and you can bring the balances over: see [Switching from another bank](#switching-from-another-bank).
 6. **Restart the server.** The database tables are created automatically on first start. `sql/install.sql` is there if you'd rather run it yourself.
@@ -145,7 +145,7 @@ When a card is ordered, the player gets the item. At an ATM they can only use ca
 You have two options:
 
 - **In game (recommended):** type **`/bankconfig`**. Every option has a label and a short explanation. Changes apply instantly for everyone, with no restart. "Add bank here" saves your current position as a new bank counter. "Reset to defaults" goes back to `config.lua`.
-- **`config.lua`:** the defaults. Anything saved in-game overrides this file. A few things can only be set here, because changing them live could break the server or lock staff out:
+- **`config/config.lua`:** the defaults. Anything saved in-game overrides this file. A few things can only be set here, because changing them live could break the server or lock staff out:
   - `framework`, `inventory`, `target`, `billing`, `notify` (all `auto` by default)
   - `debug` (adds `/bank` and `/atm` test commands)
   - `admin` (who counts as staff)
@@ -159,9 +159,9 @@ Most ATMs are props, found by model (`atmModels`). A few are built into a buildi
 
 ### Language
 
-Set `locale` (in `/bankconfig` → General, or `config.lua`) to the name of a file in `locales/`. To add a language:
+Set `locale` (in `/bankconfig` → General, or `config/config.lua`) to the name of a file in `config/locales/`. To add a language:
 
-1. Copy `locales/en.json` to `locales/<code>.json` (e.g. `de.json`).
+1. Copy `config/locales/en.json` to `config/locales/<code>.json` (e.g. `de.json`).
 2. Set `meta.intl` to the language's locale code (e.g. `de-DE`). Dates and money formats follow it.
 3. Translate the values, never the keys. Keep placeholders as they are: `{name}`, `{amount}` and `%s`.
 
@@ -173,7 +173,7 @@ Change `bankName`, `accent` (any hex colour; text on it switches between dark an
 
 ### Notifications
 
-`notify` in `config.lua` picks where messages appear: `ox` (ox_lib), `okok` (okokNotify), `wasabi` (wasabi_notify), `esx` or `qb` (the framework's own; on Qbox, `qb` uses qbx_core's). `auto` uses okokNotify or wasabi_notify if one is running, otherwise ox_lib.
+`notify` in `config/config.lua` picks where messages appear: `ox` (ox_lib), `okok` (okokNotify), `wasabi` (wasabi_notify), `esx` or `qb` (the framework's own; on Qbox, `qb` uses qbx_core's). `auto` uses okokNotify or wasabi_notify if one is running, otherwise ox_lib.
 
 ## Switching from another bank
 
@@ -244,27 +244,19 @@ In `/bankconfig` → Logs:
 
 ## Developing the UI
 
-The UI is React + Vite in `web/`, and builds into `html/` (which is what FiveM loads).
+The UI is React + Vite in `web/`. It builds into `web/dist/`, which is what FiveM loads, so you only need this if you change the UI.
 
 ```bash
 cd web
 npm install
 npm run dev     # opens in the browser with mock data and a dev toolbar
-npm run build   # rebuilds html/
-```
-
-Lua checks and specs (no FiveM needed):
-
-```bash
-cd tests
-npm install
-npm test
+npm run build   # rebuilds web/dist/
 ```
 
 ## Credits
 
 - Made by **LWK Development**.
-- Sounds are CC0. See `html/sounds/CREDITS.txt`.
+- Sounds are CC0. See `web/dist/sounds/CREDITS.txt`.
 - Fonts: Archivo and JetBrains Mono (SIL Open Font License), bundled through Fontsource.
 
 ## Support

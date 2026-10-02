@@ -12,7 +12,7 @@ interface BankCtx {
    */
   act: (event: string, payload: unknown, sound?: SoundName) => Promise<Result>;
   money: (n: number, opts?: { sign?: boolean }) => string;
-  /** Translated UI string (locales/<code>.json -> "ui"). */
+  /** Translated UI string (config/locales/<code>.json -> "ui"). */
   t: T;
   /** Intl locale for numbers and dates, e.g. 'de-DE'. */
   locale: string;

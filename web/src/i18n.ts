@@ -1,6 +1,6 @@
-import en from '../../locales/en.json';
+import en from '../../config/locales/en.json';
 
-/* UI strings come from locales/<code>.json -> "ui". The server sends the active
+/* UI strings come from config/locales/<code>.json -> "ui". The server sends the active
  * language with the bank data; anything missing falls back to the bundled English,
  * then to the key itself. Placeholders look like {name}. */
 

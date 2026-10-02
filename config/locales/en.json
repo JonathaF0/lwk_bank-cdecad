@@ -458,7 +458,7 @@
     "cfg_adjust": "Rate adjust %",
     "cfg_lateFee": "Late fee %",
     "cfg_distance": "Distance (m)",
-    "cfg_hint_locale": "Language file in locales/, e.g. en",
+    "cfg_hint_locale": "Language file in config/locales/, e.g. en",
     "cfg_hint_accent": "Colour for buttons and highlights",
     "cfg_hint_currency": "3-letter code, e.g. USD, EUR, GBP",
     "cfg_hint_features": "Turned off sections disappear from the bank",

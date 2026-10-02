@@ -1,8 +1,8 @@
 /* Bank UI sound effects.
  *
- * Each slot plays html/sounds/<name>.ogg (or .mp3/.wav) when that file exists;
+ * Each slot plays web/dist/sounds/<name>.ogg (or .mp3/.wav) when that file exists;
  * otherwise a quiet synthesised stand-in. Drop recordings into web/public/sounds/
- * (or html/sounds/ after a build) to replace any of them without touching code.
+ * (or web/dist/sounds/ after a build) to replace any of them without touching code.
  * Sources and licences: web/public/sounds/CREDITS.txt */
 
 export type SoundName =

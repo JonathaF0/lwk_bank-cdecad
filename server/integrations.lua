@@ -1,5 +1,5 @@
 -- Third-party scripts that move money outside the bank UI, shown in the player's activity.
--- (jg-dealerships finance shows up as bills: see bridge/billing.lua.)
+-- (jg-dealerships finance shows up as bills: see config/bridge/billing.lua.)
 
 -- lation_shops: buying or selling with bank money. Shop and society balances already go
 -- through LWK Bank via its Renewed-Banking / qb-banking / okokBanking support (compat.lua).

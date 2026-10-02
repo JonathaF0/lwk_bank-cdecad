@@ -233,7 +233,7 @@ export interface BankData {
   loans: Loan[];
   creditScore: number;
   bills: Bill[];
-  /** UI strings in the server's language (locales/<code>.json -> "ui"). */
+  /** UI strings in the server's language (config/locales/<code>.json -> "ui"). */
   ui?: Record<string, string>;
 }
 

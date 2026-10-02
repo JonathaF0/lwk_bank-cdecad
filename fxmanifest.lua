@@ -7,29 +7,29 @@ author 'LWK Development'
 version '1.0.0'
 description 'LWK Bank - banking for QBCore, Qbox and ESX'
 
-ui_page 'html/index.html'
+ui_page 'web/dist/index.html'
 
 files {
-  'html/index.html',
-  'html/assets/*',
-  'html/sounds/*',
-  'locales/*.json',
+  'web/dist/index.html',
+  'web/dist/assets/*',
+  'web/dist/sounds/*',
+  'config/locales/*.json',
   'images/*.png',
 }
 
 shared_scripts {
   '@ox_lib/init.lua',
-  'config.lua',
+  'config/config.lua',
   'shared/locale.lua',
-  'bridge/notify.lua',
+  'config/bridge/notify.lua',
 }
 
 server_scripts {
   '@oxmysql/lib/MySQL.lua',
   'server/settings.lua',
-  'bridge/framework.lua',
-  'bridge/inventory.lua',
-  'bridge/billing.lua',
+  'config/bridge/framework.lua',
+  'config/bridge/inventory.lua',
+  'config/bridge/billing.lua',
   'server/logic.lua',
   'server/logs.lua',
   'server/business.lua',
