@@ -7,16 +7,18 @@ import './styles/atm.css';
 import './styles/features.css';
 import { App } from './App';
 import { fetchNui, isBrowser, setMockHandler } from './nui';
-import { getMockData, mockHandler } from './mock';
 import { preloadSounds } from './sound';
 
 // Decode recordings at startup so even the very first open sound is the real one.
 preloadSounds();
 
-if (isBrowser) {
-  setMockHandler(mockHandler);
-  document.body.classList.add('dev-env');
-  setTimeout(() => window.postMessage({ action: 'open', data: getMockData() }, '*'), 300);
+// Browser dev only: fake Lua with mock data. Dropped from the production build.
+if (import.meta.env.DEV && isBrowser) {
+  import('./mock').then(({ getMockData, mockHandler }) => {
+    setMockHandler(mockHandler);
+    document.body.classList.add('dev-env');
+    setTimeout(() => window.postMessage({ action: 'open', data: getMockData() }, '*'), 300);
+  });
 }
 
 /** A render crash must never leave the player stuck with NUI focus and a cursor. */

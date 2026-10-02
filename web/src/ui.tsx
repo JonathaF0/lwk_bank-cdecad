@@ -8,6 +8,7 @@ import type { SoundName } from './sound';
 
 /** Native modal dialog: focus trap, Escape and top-layer stacking come free. Mounted = open. */
 export function Dialog({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
+  const { t } = useBank();
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     ref.current?.showModal();
@@ -16,7 +17,7 @@ export function Dialog({ title, onClose, children, wide }: { title: string; onCl
     <dialog ref={ref} className={`dialog ${wide ? 'dialog-wide' : ''}`} onClose={onClose} aria-label={title}>
       <div className="dialog-head">
         <h2>{title}</h2>
-        <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
+        <button type="button" className="icon-btn" aria-label={t('close')} onClick={onClose}>
           <Icon name="x" />
         </button>
       </div>
@@ -25,19 +26,20 @@ export function Dialog({ title, onClose, children, wide }: { title: string; onCl
   );
 }
 
-export function AmountField({ amount, setAmount, invalid, label = 'Amount', autoFocus = true }: { amount: number; setAmount: (n: number) => void; invalid?: boolean; label?: string; autoFocus?: boolean }) {
+export function AmountField({ amount, setAmount, invalid, label, autoFocus = true }: { amount: number; setAmount: (n: number) => void; invalid?: boolean; label?: string; autoFocus?: boolean }) {
+  const { money, t, locale } = useBank();
   return (
     <label className="amount-field">
-      <span className="sr-only">{label}</span>
+      <span className="sr-only">{label ?? t('amount')}</span>
       <span className="amount-prefix" aria-hidden="true">
-        $
+        {money(0).replace(/[\d\s.,]/g, '')}
       </span>
       <input
         autoFocus={autoFocus}
         className="amount-input num"
         inputMode="numeric"
         placeholder="0"
-        value={amount ? amount.toLocaleString('en-US') : ''}
+        value={amount ? amount.toLocaleString(locale) : ''}
         onChange={(e) => setAmount(parseAmount(e.target.value))}
         aria-invalid={invalid}
       />
@@ -46,9 +48,9 @@ export function AmountField({ amount, setAmount, invalid, label = 'Amount', auto
 }
 
 export function QuickAmounts({ values, amount, setAmount, max }: { values: number[]; amount: number; setAmount: (n: number) => void; max?: number }) {
-  const { money } = useBank();
+  const { money, t } = useBank();
   return (
-    <div className="chips" role="group" aria-label="Quick amounts">
+    <div className="chips" role="group" aria-label={t('quick_amounts')}>
       {values.map((q) => (
         <button key={q} type="button" className="chip" aria-pressed={amount === q} onClick={() => setAmount(q)}>
           {money(q)}
@@ -56,7 +58,7 @@ export function QuickAmounts({ values, amount, setAmount, max }: { values: numbe
       ))}
       {max !== undefined && (
         <button type="button" className="chip" aria-pressed={amount === max && max > 0} onClick={() => setAmount(max)}>
-          All · {money(max)}
+          {t('all')} · {money(max)}
         </button>
       )}
     </div>
@@ -112,10 +114,11 @@ export function useAction() {
 }
 
 export function SubmitButton({ busy, disabled, children, icon = 'check' }: { busy: boolean; disabled?: boolean; children: ReactNode; icon?: Parameters<typeof Icon>[0]['name'] }) {
+  const { t } = useBank();
   return (
     <button className="btn btn-primary btn-block" disabled={disabled || busy} aria-busy={busy}>
       {busy ? <span className="spinner" aria-hidden="true" /> : <Icon name={icon} />}
-      {busy ? 'Processing' : children}
+      {busy ? t('processing') : children}
     </button>
   );
 }

@@ -182,6 +182,8 @@ export interface CreditBand {
 
 export interface BankConfig {
   bankName: string;
+  /** Intl locale for numbers/dates (from the locale file's meta.intl), e.g. 'de-DE'. */
+  locale?: string;
   /** Hex colour, e.g. "#c8f031". */
   accent: string;
   currency: string;
@@ -231,6 +233,8 @@ export interface BankData {
   loans: Loan[];
   creditScore: number;
   bills: Bill[];
+  /** UI strings in the server's language (locales/<code>.json -> "ui"). */
+  ui?: Record<string, string>;
 }
 
 export type Result = { ok: true; data: BankData } | { ok: false; error: string };

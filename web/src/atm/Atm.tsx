@@ -11,7 +11,7 @@ type Step = 'card' | 'pin' | 'menu';
 const QUICK = [100, 200, 500, 1_000, 2_500];
 
 export function Atm({ onClose }: { onClose: () => void }) {
-  const { data } = useBank();
+  const { data, t } = useBank();
   const root = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState<Step>('card');
   const [cardId, setCardId] = useState(data.cards.find((c) => c.status === 'active')?.id ?? data.cards[0]?.id);
@@ -27,13 +27,13 @@ export function Atm({ onClose }: { onClose: () => void }) {
   return (
     <div ref={root} className="atm">
       <header className="hud hud-top">
-        <Brand name={data.config.bankName} suffix="ATM · 24h" />
+        <Brand name={data.config.bankName} suffix={t('atm_suffix')} />
 
         <div className="mono muted" data-hud>
-          <Scramble text={step === 'card' ? 'Select card' : step === 'pin' ? 'Verify PIN' : 'Withdraw · deposit'} key={step} />
+          <Scramble text={t(step === 'card' ? 'atm_select_card' : step === 'pin' ? 'atm_verify_pin' : 'atm_menu')} key={step} />
         </div>
         <button className="mono esc" onClick={onClose} data-hud>
-          <kbd>Esc</kbd> {step === 'card' ? 'Close' : 'Eject card'}
+          <kbd>Esc</kbd> {t(step === 'card' ? 'close' : 'eject_card')}
         </button>
       </header>
 
@@ -41,13 +41,13 @@ export function Atm({ onClose }: { onClose: () => void }) {
         {!card ? (
           <div className="atm-empty" data-step>
             <Icon name="card" size={2.5} />
-            <h2 data-in>No bank card</h2>
+            <h2 data-in>{t('no_bank_card')}</h2>
             <p className="muted" data-in>
-              You need a card to use this ATM. Get one from any {data.config.bankName} branch.
+              {t('need_card', { bank: data.config.bankName })}
             </p>
             <div data-in>
               <button className="btn btn-ghost" onClick={onClose}>
-                Close
+                {t('close')}
               </button>
             </div>
           </div>
@@ -66,7 +66,7 @@ export function Atm({ onClose }: { onClose: () => void }) {
 /* ---------- 1. choose + insert card ---------- */
 
 function CardStep({ cards, card, setCardId, onInserted }: { cards: Card[]; card: Card; setCardId: (id: string) => void; onInserted: () => void }) {
-  const { data } = useBank();
+  const { data, t } = useBank();
   const card3d = useRef<Card3DHandle>(null);
   const [inserting, setInserting] = useState(false);
   const blocked = card.status !== 'active';
@@ -83,12 +83,12 @@ function CardStep({ cards, card, setCardId, onInserted }: { cards: Card[]; card:
       <div className="atm-stage">
         <Card3D ref={card3d} card={card} bankName={data.config.bankName} accent={data.config.accent} />
         <div className={`slot-line ${inserting ? 'is-hot' : ''}`} aria-hidden="true" />
-        <span className="mono muted atm-hint">Move to tilt · click to flip</span>
+        <span className="mono muted atm-hint">{t('card_hint')}</span>
       </div>
 
       <div className="atm-side">
         <h2 className="atm-title" data-in>
-          Insert your card
+          {t('insert_your_card')}
         </h2>
         <ul className="card-list" data-in>
           {cards.map((c) => {
@@ -99,11 +99,11 @@ function CardStep({ cards, card, setCardId, onInserted }: { cards: Card[]; card:
                   <span className={`card-swatch tier-${c.tier}`} aria-hidden="true" />
                   <span className="card-row-main">
                     <span>
-                      {c.tier[0].toUpperCase() + c.tier.slice(1)} · •• {c.last4}
+                      {t('tier_' + c.tier)} · •• {c.last4}
                     </span>
-                    <span className="mono muted">{acc?.name ?? 'Unlinked'}</span>
+                    <span className="mono muted">{acc?.name ?? t('unlinked')}</span>
                   </span>
-                  {c.status !== 'active' && <span className="badge-blocked mono">{c.status === 'blocked' ? 'Frozen' : 'Inactive'}</span>}
+                  {c.status !== 'active' && <span className="badge-blocked mono">{t('status_' + c.status)}</span>}
                 </button>
               </li>
             );
@@ -112,11 +112,11 @@ function CardStep({ cards, card, setCardId, onInserted }: { cards: Card[]; card:
         <div className="atm-actions" data-in>
           {blocked && (
             <p className="error-text">
-              <Icon name="alert" size={1} /> {card.status === 'blocked' ? 'This card is frozen. Unfreeze it in the bank app.' : 'Activate this card in the bank app first.'}
+              <Icon name="alert" size={1} /> {t(card.status === 'blocked' ? 'card_frozen_hint' : 'card_inactive_hint')}
             </p>
           )}
           <button className="btn btn-primary btn-block" disabled={blocked || inserting} onClick={insert}>
-            <Icon name="card" /> {inserting ? 'Reading card…' : 'Insert card'}
+            <Icon name="card" /> {t(inserting ? 'reading_card' : 'insert_card')}
           </button>
         </div>
       </div>
@@ -129,6 +129,7 @@ function CardStep({ cards, card, setCardId, onInserted }: { cards: Card[]; card:
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'back'];
 
 function PinStep({ card, onOk }: { card: Card; onOk: () => void }) {
+  const { t } = useBank();
   const [pin, setPin] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -151,12 +152,12 @@ function PinStep({ card, onOk }: { card: Card; onOk: () => void }) {
     let live = true;
     setBusy(true);
     fetchNui<{ ok: boolean; error?: string }>('verifyPin', { cardId: card.id, pin })
-      .catch(() => ({ ok: false, error: 'Card reader error. Try again.' }))
+      .catch(() => ({ ok: false, error: t('card_reader_error') }))
       .then((r) => {
         if (!live) return;
         setBusy(false);
         if (r.ok) return okRef.current();
-        setError(r.error ?? 'Incorrect PIN');
+        setError(r.error ?? t('incorrect_pin'));
         setPin('');
         gsap.fromTo(dots.current, { x: -12 }, { x: 0, duration: 0.6, ease: 'elastic.out(1.2, 0.25)' });
       });
@@ -178,27 +179,27 @@ function PinStep({ card, onOk }: { card: Card; onOk: () => void }) {
     <div className="atm-pin" data-step>
       <div className="pin-info">
         <span className="mono muted" data-in>
-          Card •• {card.last4}
+          {t('card_last4', { last4: card.last4 })}
         </span>
         <h2 className="atm-title" data-in>
-          Enter your PIN
+          {t('enter_pin')}
         </h2>
-        <div ref={dots} className="pin-dots" data-in role="status" aria-label={`${pin.length} of 4 digits entered`}>
+        <div ref={dots} className="pin-dots" data-in role="status" aria-label={t('pin_progress', { count: pin.length })}>
           {[0, 1, 2, 3].map((i) => (
             <span key={i} className={i < pin.length ? 'is-on' : ''} />
           ))}
         </div>
         <p className="error-text" role="alert" data-in>
-          {error && <Icon name="alert" size={1} />} {busy ? 'Checking…' : error}
+          {error && <Icon name="alert" size={1} />} {busy ? t('checking_pin') : error}
         </p>
         <span className="mono muted" data-in>
-          Shield the keypad · type or click
+          {t('shield_keypad')}
         </span>
       </div>
       <div className="keypad" data-in>
         {KEYS.map((k) => (
-          <button key={k} className={`key ${k.length > 1 ? 'key-fn' : ''}`} onClick={() => press(k)} disabled={busy} data-sound="none" aria-label={k === 'back' ? 'Delete digit' : k === 'clear' ? 'Clear PIN' : k}>
-            {k === 'back' ? <Icon name="left" /> : k === 'clear' ? <span className="mono">Clr</span> : k}
+          <button key={k} className={`key ${k.length > 1 ? 'key-fn' : ''}`} onClick={() => press(k)} disabled={busy} data-sound="none" aria-label={k === 'back' ? t('delete_digit') : k === 'clear' ? t('clear_pin') : k}>
+            {k === 'back' ? <Icon name="left" /> : k === 'clear' ? <span className="mono">{t('clr')}</span> : k}
           </button>
         ))}
       </div>
@@ -209,7 +210,7 @@ function PinStep({ card, onOk }: { card: Card; onOk: () => void }) {
 /* ---------- 3. withdraw / deposit ---------- */
 
 function MenuStep({ card, onDone }: { card: Card; onDone: () => void }) {
-  const { data, act, money } = useBank();
+  const { data, act, money, t, locale } = useBank();
   const acc = data.accounts.find((a) => a.id === card.accountId);
   const [mode, setMode] = useState<'withdraw' | 'deposit'>('withdraw');
   const [raw, setRaw] = useState('');
@@ -230,7 +231,7 @@ function MenuStep({ card, onDone }: { card: Card; onDone: () => void }) {
     { scope: root, dependencies: [cash] },
   );
 
-  if (!acc) return <div className="atm-empty">This card isn't linked to an account.</div>;
+  if (!acc) return <div className="atm-empty">{t('card_not_linked')}</div>;
 
   const max = mode === 'withdraw' ? acc.balance : data.player.cash;
   const amount = parseAmount(raw);
@@ -259,18 +260,18 @@ function MenuStep({ card, onDone }: { card: Card; onDone: () => void }) {
         </span>
         <CountUp value={acc.balance} format={money} className="balance-xl" />
         <span className="muted" data-in>
-          Cash on hand <strong className="num">{money(data.player.cash)}</strong>
+          {t('cash_on_hand')} <strong className="num">{money(data.player.cash)}</strong>
         </span>
         {/* GSAP animates the wrapper: .btn's own CSS transitions would fight the tween. */}
         <div className="atm-done" data-in>
           <button className="btn btn-ghost" onClick={onDone}>
-            <Icon name="card" /> Take card & finish
+            <Icon name="card" /> {t('take_card_finish')}
           </button>
         </div>
       </div>
 
       <div className="atm-ops" data-in>
-        <div className="seg" role="tablist" aria-label="Operation">
+        <div className="seg" role="tablist" aria-label={t('operation')}>
           {(['withdraw', 'deposit'] as const).map((m) => (
             <button
               key={m}
@@ -282,7 +283,7 @@ function MenuStep({ card, onDone }: { card: Card; onDone: () => void }) {
                 setRaw('');
               }}
             >
-              {m === 'withdraw' ? 'Withdraw' : 'Deposit'}
+              {t(m)}
             </button>
           ))}
         </div>
@@ -294,27 +295,27 @@ function MenuStep({ card, onDone }: { card: Card; onDone: () => void }) {
             </button>
           ))}
           <button className="quick quick-max" disabled={busy || max <= 0} onClick={() => run(max)}>
-            <span className="mono">All</span>
+            <span className="mono">{t('all')}</span>
             <span className="num">{money(max)}</span>
           </button>
         </div>
 
         <form className="other" onSubmit={submit}>
           <label className="search">
-            <span className="sr-only">Other amount</span>
+            <span className="sr-only">{t('other_amount')}</span>
             <span className="other-prefix" aria-hidden="true">
-              $
+              {money(0).replace(/[\d\s.,]/g, '')}
             </span>
-            <input className="input" inputMode="numeric" placeholder="Other amount" value={amount ? amount.toLocaleString('en-US') : ''} onChange={(e) => setRaw(e.target.value)} />
+            <input className="input" inputMode="numeric" placeholder={t('other_amount')} value={amount ? amount.toLocaleString(locale) : ''} onChange={(e) => setRaw(e.target.value)} />
           </label>
           <button className="btn btn-primary" disabled={!amount || amount > max || busy} aria-busy={busy}>
             {busy ? <span className="spinner" aria-hidden="true" /> : <Icon name={mode === 'withdraw' ? 'out' : 'in'} />}
-            {mode === 'withdraw' ? 'Withdraw' : 'Deposit'}
+            {t(mode)}
           </button>
         </form>
         <p className="error-text" role="alert">
           {(error || amount > max) && <Icon name="alert" size={1} />}
-          {amount > max ? (mode === 'withdraw' ? 'Not enough in this account' : `You only have ${money(max)} cash`) : error}
+          {amount > max ? (mode === 'withdraw' ? t('err_not_enough') : t('err_only_cash', { amount: money(max) })) : error}
         </p>
       </div>
 
@@ -328,7 +329,7 @@ function MenuStep({ card, onDone }: { card: Card; onDone: () => void }) {
             ))}
           </div>
           <span className="mono muted" data-in>
-            Take your cash
+            {t('take_your_cash')}
           </span>
           <span className="dispense-amount num" data-in>
             {money(cash)}

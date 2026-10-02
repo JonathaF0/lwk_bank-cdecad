@@ -9,10 +9,8 @@ import { AmountField, Dialog, ErrorLine, Progress, SubmitButton, useAction } fro
 import { AccountPills } from './Overview';
 import type { SectionProps } from './Bank';
 
-const STATUS = { active: 'On track', grace: 'Grace period', late: 'Late' } as const;
-
 export function Loans({ accountId, setAccountId, active }: SectionProps) {
-  const { data, cfg, money } = useBank();
+  const { data, cfg, money, t } = useBank();
   const { busy, error, run } = useAction();
   const lc = cfg.loans;
   const band = creditBand(data.creditScore, lc.bands);
@@ -36,11 +34,11 @@ export function Loans({ accountId, setAccountId, active }: SectionProps) {
   const q = plan ? quoteLoan(amount, plan.rate, term, band.adjust) : null;
   const atMax = data.loans.length >= lc.maxActive;
   const blocker = !acc?.perms.loans
-    ? "You can't take loans on this account"
+    ? t('err_no_loan_access')
     : atMax
-      ? `You already have ${lc.maxActive} active loans`
+      ? t('err_max_loans', { count: lc.maxActive })
       : plan && ceiling < plan.min
-        ? `Your limit doesn't cover the ${plan.name} minimum`
+        ? t('err_limit_below_min', { name: plan.name })
         : '';
 
   return (
@@ -50,17 +48,17 @@ export function Loans({ accountId, setAccountId, active }: SectionProps) {
         <div className="ln-score-meta" data-reveal>
           <span className="pill-stat">{band.label}</span>
           <span className="pill-stat">
-            Rate {band.adjust > 0 ? '+' : band.adjust < 0 ? '−' : '±'}
+            {t('rate')} {band.adjust > 0 ? '+' : band.adjust < 0 ? '−' : '±'}
             {Math.abs(band.adjust)}%
           </span>
-          <span className="pill-stat">Can borrow {money(available)}</span>
+          <span className="pill-stat">{t('can_borrow', { amount: money(available) })}</span>
         </div>
 
         <div className="section-head" data-reveal>
           <span className="mono muted">
-            Active loans · {data.loans.length}/{lc.maxActive}
+            {t('active_loans', { n: data.loans.length, max: lc.maxActive })}
           </span>
-          <span className="mono muted">{money(owed)} owed</span>
+          <span className="mono muted">{t('owed', { amount: money(owed) })}</span>
         </div>
         {data.loans.length ? (
           <ul className="loan-list">
@@ -70,19 +68,19 @@ export function Loans({ accountId, setAccountId, active }: SectionProps) {
               return (
                 <li key={l.id} className="loan" data-reveal>
                   <div className="loan-top">
-                    <strong>{p?.name ?? 'Loan'}</strong>
-                    <span className={`badge is-${l.status}`}>{STATUS[l.status]}</span>
+                    <strong>{p?.name ?? t('loan')}</strong>
+                    <span className={`badge is-${l.status}`}>{t('loan_' + l.status)}</span>
                   </div>
-                  <Progress value={total - l.remaining} max={total} label="Repaid" tone={l.status === 'late' ? 'neg' : l.status === 'grace' ? 'warn' : undefined} />
+                  <Progress value={total - l.remaining} max={total} label={t('repaid')} tone={l.status === 'late' ? 'neg' : l.status === 'grace' ? 'warn' : undefined} />
                   <div className="loan-bottom">
                     <span className="num">
-                      {money(l.remaining)} <span className="muted">left · {money(l.dailyPayment)}/day</span>
+                      {money(l.remaining)} <span className="muted">{t('left_per_day', { amount: money(l.dailyPayment) })}</span>
                     </span>
                     <span className="mono muted">
-                      {l.status === 'grace' ? `Pay within ${lc.graceHours}h` : `Due in ${timeUntil(l.nextDueAt)}`}
+                      {l.status === 'grace' ? t('pay_within', { hours: lc.graceHours }) : t('due_in', { time: timeUntil(l.nextDueAt) })}
                     </span>
                     <button className="btn btn-ghost btn-sm" onClick={() => setPaying(l)}>
-                      Pay
+                      {t('pay')}
                     </button>
                   </div>
                 </li>
@@ -91,16 +89,16 @@ export function Loans({ accountId, setAccountId, active }: SectionProps) {
           </ul>
         ) : (
           <p className="empty-note" data-reveal>
-            No active loans. Paying loans off on time raises your score.
+            {t('no_loans')}
           </p>
         )}
       </div>
 
       <aside className="ln-apply">
         <span className="mono muted" data-reveal>
-          Loan calculator
+          {t('loan_calculator')}
         </span>
-        <div className="plan-grid" role="radiogroup" aria-label="Loan plan" data-reveal>
+        <div className="plan-grid" role="radiogroup" aria-label={t('loan_plan')} data-reveal>
           {lc.plans.map((p) => (
             <button key={p.id} type="button" role="radio" aria-checked={p.id === plan?.id} className="plan-opt" onClick={() => setPlanId(p.id)}>
               <strong>{p.name}</strong>
@@ -116,7 +114,7 @@ export function Loans({ accountId, setAccountId, active }: SectionProps) {
           <>
             <div className="kv" data-reveal>
               <label className="kv-row" htmlFor="loan-amount">
-                <span className="mono muted">Amount</span>
+                <span className="mono muted">{t('amount')}</span>
                 <span className="num ln-amount">{money(amount)}</span>
               </label>
               <input
@@ -132,10 +130,10 @@ export function Loans({ accountId, setAccountId, active }: SectionProps) {
               />
             </div>
 
-            <div className="chips" role="radiogroup" aria-label="Repayment term" data-reveal>
-              {lc.terms.map((t) => (
-                <button key={t} type="button" role="radio" aria-checked={t === term} className="chip" aria-pressed={t === term} onClick={() => setTerm(t)}>
-                  {t} days
+            <div className="chips" role="radiogroup" aria-label={t('repayment_term')} data-reveal>
+              {lc.terms.map((d) => (
+                <button key={d} type="button" role="radio" aria-checked={d === term} className="chip" aria-pressed={d === term} onClick={() => setTerm(d)}>
+                  {t('n_days', { count: d })}
                 </button>
               ))}
             </div>
@@ -143,33 +141,33 @@ export function Loans({ accountId, setAccountId, active }: SectionProps) {
             {q && (
               <dl className="quote" data-reveal>
                 <div>
-                  <dt className="mono muted">Rate</dt>
+                  <dt className="mono muted">{t('rate')}</dt>
                   <dd>{q.rate}%</dd>
                 </div>
                 <div>
-                  <dt className="mono muted">Interest</dt>
+                  <dt className="mono muted">{t('interest')}</dt>
                   <dd className="num">{money(q.interest)}</dd>
                 </div>
                 <div>
-                  <dt className="mono muted">Daily</dt>
+                  <dt className="mono muted">{t('daily')}</dt>
                   <dd className="num">{money(q.daily)}</dd>
                 </div>
                 <div>
-                  <dt className="mono muted">Total repay</dt>
+                  <dt className="mono muted">{t('total_repay')}</dt>
                   <dd className="num">{money(q.total)}</dd>
                 </div>
               </dl>
             )}
 
             <div className="ln-to" data-reveal>
-              <span className="mono muted">Pay out to</span>
+              <span className="mono muted">{t('pay_out_to')}</span>
               <AccountPills accountId={acc?.id ?? ''} setAccountId={setAccountId} />
             </div>
 
             <div className="ln-go" data-reveal>
               <ErrorLine error={blocker || error} />
               <HoldButton
-                label={busy ? 'Processing…' : `Borrow ${money(amount)}`}
+                label={busy ? t('processing') : t('borrow_amount', { amount: money(amount) })}
                 disabled={!!blocker || busy || !acc}
                 onConfirm={() => run('loanApply', { accountId: acc!.id, planId: plan.id, amount, termDays: term }, 'counter')}
               />
@@ -191,7 +189,7 @@ const angle = (s: number) => Math.PI * (1 - (Math.min(Math.max(s, MIN), MAX) - M
 const pt = (s: number, r: number) => [100 + r * Math.cos(angle(s)), 100 - r * Math.sin(angle(s))];
 
 function CreditGauge({ score, play }: { score: number; play: boolean }) {
-  const { cfg } = useBank();
+  const { cfg, t } = useBank();
   const root = useRef<HTMLDivElement>(null);
   const bands = cfg.loans.bands;
   const band = creditBand(score, bands);
@@ -219,7 +217,7 @@ function CreditGauge({ score, play }: { score: number; play: boolean }) {
 
   return (
     <div ref={root} className="gauge" data-reveal>
-      <svg viewBox="0 0 200 112" role="img" aria-label={`Credit score ${score}, ${band.label}`}>
+      <svg viewBox="0 0 200 112" role="img" aria-label={t('credit_score_aria', { score, band: band.label })}>
         {arcs.map((d, i) => (
           <path key={i} d={d} className={`gauge-arc band-${Math.round((i / Math.max(bands.length - 1, 1)) * 5)}`} pathLength={1} strokeDasharray="1" opacity={i === band.index ? 1 : 0.35} />
         ))}
@@ -230,14 +228,14 @@ function CreditGauge({ score, play }: { score: number; play: boolean }) {
       </svg>
       <div className="gauge-read">
         <CountUp value={score} format={(n) => String(n)} className="gauge-score" />
-        <span className="mono muted">Credit score · {MIN}–{MAX}</span>
+        <span className="mono muted">{t('credit_score_range', { min: MIN, max: MAX })}</span>
       </div>
     </div>
   );
 }
 
 function PayDialog({ loan, onClose }: { loan: Loan; onClose: () => void }) {
-  const { data, money } = useBank();
+  const { data, money, t } = useBank();
   const { busy, error, run } = useAction();
   const [amount, setAmount] = useState(Math.min(loan.dailyPayment, loan.remaining));
   const acc = data.accounts.find((a) => a.id === loan.accountId);
@@ -250,23 +248,23 @@ function PayDialog({ loan, onClose }: { loan: Loan; onClose: () => void }) {
   };
 
   return (
-    <Dialog title="Repay loan" onClose={onClose}>
+    <Dialog title={t('repay_loan')} onClose={onClose}>
       <form className="dialog-form" onSubmit={submit}>
         <AmountField amount={amount} setAmount={setAmount} invalid={over} />
         <div className="chips">
           <button type="button" className="chip" aria-pressed={amount === loan.dailyPayment} onClick={() => setAmount(Math.min(loan.dailyPayment, loan.remaining))}>
-            Next payment · {money(Math.min(loan.dailyPayment, loan.remaining))}
+            {t('next_payment')} · {money(Math.min(loan.dailyPayment, loan.remaining))}
           </button>
           <button type="button" className="chip" aria-pressed={amount === loan.remaining} onClick={() => setAmount(loan.remaining)}>
-            Pay off · {money(loan.remaining)}
+            {t('pay_off')} · {money(loan.remaining)}
           </button>
         </div>
         <span className="mono muted">
-          From {acc?.name} · {money(acc?.balance ?? 0)} available. Extra payments reduce what you owe.
+          {t('repay_note', { name: acc?.name ?? '', amount: money(acc?.balance ?? 0) })}
         </span>
-        <ErrorLine error={over ? 'Not enough in the account' : error} />
+        <ErrorLine error={over ? t('err_not_enough') : error} />
         <SubmitButton busy={busy} disabled={!amount || over} icon="check">
-          Pay {money(Math.min(amount, loan.remaining))}
+          {t('pay_amount', { amount: money(Math.min(amount, loan.remaining)) })}
         </SubmitButton>
       </form>
     </Dialog>

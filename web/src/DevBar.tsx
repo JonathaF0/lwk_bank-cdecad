@@ -13,7 +13,14 @@ export function DevBar() {
       <span>Dev</span>
       <button onClick={() => send({ action: 'open', data: getMockData() })}>Bank</button>
       <button onClick={() => send({ action: 'openAtm', data: getMockData() })}>ATM</button>
-      <button onClick={() => send({ action: 'update', data: simulateIncoming() })}>+$750</button>
+      <button
+        onClick={() => {
+          send({ action: 'update', data: simulateIncoming() });
+          send({ action: 'incoming', amount: 750, from: 'Yusuf Adebayo' });
+        }}
+      >
+        +$750
+      </button>
       <button
         onClick={() =>
           send({ action: 'update', data: patchMockConfig((c) => (c.accent = ACCENTS[(ACCENTS.indexOf(c.accent) + 1) % ACCENTS.length])) })

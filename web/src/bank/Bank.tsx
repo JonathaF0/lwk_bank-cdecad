@@ -38,8 +38,11 @@ const STEP = 38;
 const pad = (n: number) => String(n).padStart(2, '0');
 
 export function Bank({ onClose }: { onClose: () => void }) {
-  const { data, cfg, money } = useBank();
-  const sections = useMemo(() => ALL_SECTIONS.filter((s) => !s.flag || cfg.features[s.flag]), [cfg.features]);
+  const { data, cfg, money, t } = useBank();
+  const sections = useMemo(
+    () => ALL_SECTIONS.filter((s) => !s.flag || cfg.features[s.flag]).map((s) => ({ ...s, label: t('section_' + s.id) })),
+    [cfg.features, t],
+  );
   const [activeId, setActiveId] = useState<SectionId>('overview');
   const active = Math.max(0, sections.findIndex((s) => s.id === activeId));
   const [accountId, setAccountId] = useState(data.accounts[0]?.id ?? '');
@@ -112,8 +115,7 @@ export function Bank({ onClose }: { onClose: () => void }) {
       <header className="hud hud-top">
         <Brand name={cfg.bankName} />
 
-
-        <nav ref={tabs} className="tabs" aria-label="Bank sections" data-hud>
+        <nav ref={tabs} className="tabs" aria-label={t('aria_sections')} data-hud>
           {sections.map((s, i) => (
             <button key={s.id} className="tab" aria-current={i === active ? 'page' : undefined} onClick={() => goIndex(i)}>
               <span className="mono">{pad(i + 1)}</span>
@@ -126,7 +128,7 @@ export function Bank({ onClose }: { onClose: () => void }) {
         <div className="who" data-hud>
           <span className="who-name">{data.player.name}</span>
           <span className="mono muted">
-            Cash <CountUp value={data.player.cash} format={money} className="who-cash" />
+            {t('cash')} <CountUp value={data.player.cash} format={money} className="who-cash" />
           </span>
         </div>
       </header>
@@ -153,9 +155,9 @@ export function Bank({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         {/* Side panels are inert; these catch clicks on them instead. */}
-        {active > 0 && <button className="peek peek-left" aria-label={`Go to ${sections[active - 1].label}`} onClick={() => goIndex(active - 1)} />}
+        {active > 0 && <button className="peek peek-left" aria-label={t('go_to', { name: sections[active - 1].label })} onClick={() => goIndex(active - 1)} />}
         {active < sections.length - 1 && (
-          <button className="peek peek-right" aria-label={`Go to ${sections[active + 1].label}`} onClick={() => goIndex(active + 1)} />
+          <button className="peek peek-right" aria-label={t('go_to', { name: sections[active + 1].label })} onClick={() => goIndex(active + 1)} />
         )}
       </div>
 
@@ -164,10 +166,10 @@ export function Bank({ onClose }: { onClose: () => void }) {
           <Scramble key={active} text={`${sections[active].label} · ${pad(active + 1)}/${pad(sections.length)}`} />
         </div>
         <div className="mono muted" data-hud>
-          ← → Navigate
+          {t('nav_hint')}
         </div>
         <button className="mono esc" onClick={onClose} data-hud>
-          <kbd>Esc</kbd> Close
+          <kbd>Esc</kbd> {t('close')}
         </button>
       </footer>
     </div>

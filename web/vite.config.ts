@@ -5,6 +5,8 @@ export default defineConfig({
   plugins: [react()],
   // FiveM loads the UI from nui://<resource>/html/, so asset paths must be relative.
   base: './',
+  // The UI bundles locales/en.json from the resource root as its fallback strings.
+  server: { fs: { allow: ['..'] } },
   build: {
     outDir: '../html',
     emptyOutDir: true,

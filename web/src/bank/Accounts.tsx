@@ -5,12 +5,10 @@ import { HoldButton, Icon } from '../fx';
 import { Dialog, ErrorLine, SubmitButton, useAction } from '../ui';
 import type { SectionProps } from './Bank';
 
-const TYPE = { personal: 'Personal', business: 'Business', shared: 'Shared' } as const;
 const PERMS: (keyof Perms)[] = ['deposit', 'withdraw', 'transfer', 'loans'];
-const date = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
 export function Accounts({ accountId, setAccountId }: SectionProps) {
-  const { data, cfg, money } = useBank();
+  const { data, cfg, money, t } = useBank();
   const [creating, setCreating] = useState(false);
   const acc = data.accounts.find((a) => a.id === accountId) ?? data.accounts[0];
   const owned = data.accounts.filter((a) => a.role === 'owner').length;
@@ -20,10 +18,10 @@ export function Accounts({ accountId, setAccountId }: SectionProps) {
       <div className="ac-list">
         <div className="section-head" data-reveal>
           <span className="mono muted">
-            {data.accounts.length} accounts · you own {owned}/{cfg.accounts.maxOwned}
+            {t('accounts_count', { count: data.accounts.length, owned, max: cfg.accounts.maxOwned })}
           </span>
           <button className="link mono" onClick={() => setCreating(true)} disabled={owned >= cfg.accounts.maxOwned}>
-            + Open account
+            {t('open_account_link')}
           </button>
         </div>
         <ul className="ac-cards">
@@ -31,8 +29,8 @@ export function Accounts({ accountId, setAccountId }: SectionProps) {
             <li key={a.id} data-reveal>
               <button className="ac-card" aria-pressed={a.id === acc?.id} onClick={() => setAccountId(a.id)}>
                 <span className="ac-card-top">
-                  <span className="mono">{TYPE[a.type]}</span>
-                  <span className={`badge ${a.role === 'owner' ? 'is-active' : ''}`}>{a.role === 'owner' ? 'Owner' : 'Member'}</span>
+                  <span className="mono">{t('type_' + a.type)}</span>
+                  <span className={`badge ${a.role === 'owner' ? 'is-active' : ''}`}>{t('role_' + a.role)}</span>
                 </span>
                 <strong>{a.name}</strong>
                 <span className="ac-card-bottom">
@@ -45,7 +43,7 @@ export function Accounts({ accountId, setAccountId }: SectionProps) {
         </ul>
       </div>
 
-      <aside className="ac-detail">{acc ? <AccountDetail key={acc.id} acc={acc} /> : <p className="empty-note">No accounts yet.</p>}</aside>
+      <aside className="ac-detail">{acc ? <AccountDetail key={acc.id} acc={acc} /> : <p className="empty-note">{t('no_accounts')}</p>}</aside>
 
       {creating && <CreateDialog onClose={() => setCreating(false)} onCreated={(id) => setAccountId(id)} />}
     </div>
@@ -53,7 +51,7 @@ export function Accounts({ accountId, setAccountId }: SectionProps) {
 }
 
 function AccountDetail({ acc }: { acc: Account }) {
-  const { cfg, money } = useBank();
+  const { cfg, money, t, locale } = useBank();
   const { busy, error, run } = useAction();
   const [name, setName] = useState(acc.name);
   const [ibanOpen, setIbanOpen] = useState(false);
@@ -79,10 +77,10 @@ function AccountDetail({ acc }: { acc: Account }) {
   return (
     <div className="ac-body">
       <form className="ac-rename" onSubmit={rename} data-reveal>
-        <input className="input input-title" value={name} maxLength={28} disabled={!owner} onChange={(e) => setName(e.target.value)} aria-label="Account name" />
+        <input className="input input-title" value={name} maxLength={28} disabled={!owner} onChange={(e) => setName(e.target.value)} aria-label={t('account_name')} />
         {owner && name.trim() !== acc.name && (
           <button className="btn btn-primary btn-sm" disabled={busy || !name.trim()}>
-            Save
+            {t('save')}
           </button>
         )}
       </form>
@@ -93,22 +91,22 @@ function AccountDetail({ acc }: { acc: Account }) {
           <dd className="mono">
             {acc.iban}
             {owner && cfg.features.customIban && (
-              <button className="icon-btn" aria-label="Customize IBAN" onClick={() => setIbanOpen(true)}>
+              <button className="icon-btn" aria-label={t('customize_iban')} onClick={() => setIbanOpen(true)}>
                 <Icon name="edit" size={0.875} />
               </button>
             )}
           </dd>
         </div>
         <div>
-          <dt className="mono muted">Type</dt>
-          <dd>{TYPE[acc.type]}</dd>
+          <dt className="mono muted">{t('type')}</dt>
+          <dd>{t('type_' + acc.type)}</dd>
         </div>
         <div>
-          <dt className="mono muted">Opened</dt>
-          <dd>{date.format(acc.openedAt)}</dd>
+          <dt className="mono muted">{t('opened')}</dt>
+          <dd>{new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(acc.openedAt)}</dd>
         </div>
         <div>
-          <dt className="mono muted">Checking · savings</dt>
+          <dt className="mono muted">{t('checking_savings')}</dt>
           <dd className="num">
             {money(acc.balance)} · {money(acc.savings + acc.goals.reduce((s, g) => s + g.saved, 0))}
           </dd>
@@ -117,11 +115,11 @@ function AccountDetail({ acc }: { acc: Account }) {
 
       {!owner && (
         <div className="kv" data-reveal>
-          <span className="mono muted">Your access</span>
+          <span className="mono muted">{t('your_access')}</span>
           <div className="perm-row">
             {PERMS.map((p) => (
               <span key={p} className={`perm ${acc.perms[p] ? 'is-on' : ''}`}>
-                <Icon name={acc.perms[p] ? 'check' : 'x'} size={0.75} /> {p}
+                <Icon name={acc.perms[p] ? 'check' : 'x'} size={0.75} /> {t('perm_' + p)}
               </span>
             ))}
           </div>
@@ -132,7 +130,7 @@ function AccountDetail({ acc }: { acc: Account }) {
         <div className="ac-members" data-reveal>
           <div className="section-head">
             <span className="mono muted">
-              <Icon name="users" size={0.875} /> Members · {acc.members.length}
+              <Icon name="users" size={0.875} /> {t('members_count', { count: acc.members.length })}
             </span>
           </div>
           <ul>
@@ -147,9 +145,9 @@ function AccountDetail({ acc }: { acc: Account }) {
                 </span>
                 <span className="member-name">
                   {m.name}
-                  <span className="mono muted">{m.role}</span>
+                  <span className="mono muted">{t('role_' + m.role)}</span>
                 </span>
-                <span className="perm-row" role="group" aria-label={`${m.name} permissions`}>
+                <span className="perm-row" role="group" aria-label={t('member_perms', { name: m.name })}>
                   {PERMS.map((p) => (
                     <button
                       key={p}
@@ -160,12 +158,12 @@ function AccountDetail({ acc }: { acc: Account }) {
                       onClick={() => setPerm(m, p)}
                       data-sound="toggle"
                     >
-                      {p}
+                      {t('perm_' + p)}
                     </button>
                   ))}
                 </span>
                 {owner && m.role !== 'owner' && (
-                  <button className="icon-btn" aria-label={`Remove ${m.name}`} disabled={busy} onClick={() => run('memberRemove', { accountId: acc.id, memberId: m.id })}>
+                  <button className="icon-btn" aria-label={t('remove_name', { name: m.name })} disabled={busy} onClick={() => run('memberRemove', { accountId: acc.id, memberId: m.id })}>
                     <Icon name="x" size={1} />
                   </button>
                 )}
@@ -174,9 +172,9 @@ function AccountDetail({ acc }: { acc: Account }) {
           </ul>
           {owner && (
             <form className="member-add" onSubmit={addMember}>
-              <input className="input" inputMode="numeric" placeholder="Player server ID" value={playerId} onChange={(e) => setPlayerId(e.target.value.replace(/\D/g, ''))} />
+              <input className="input" inputMode="numeric" placeholder={t('player_server_id')} value={playerId} onChange={(e) => setPlayerId(e.target.value.replace(/\D/g, ''))} />
               <button className="btn btn-ghost" disabled={!playerId || busy}>
-                <Icon name="plus" /> Add member
+                <Icon name="plus" /> {t('add_member')}
               </button>
             </form>
           )}
@@ -187,7 +185,7 @@ function AccountDetail({ acc }: { acc: Account }) {
 
       {owner && acc.type !== 'business' && (
         <div className="card-danger" data-reveal>
-          <HoldButton label="Close account" variant="danger" disabled={busy} onConfirm={() => run('accountDelete', { accountId: acc.id })} />
+          <HoldButton label={t('close_account')} variant="danger" disabled={busy} onConfirm={() => run('accountDelete', { accountId: acc.id })} />
         </div>
       )}
 
@@ -197,7 +195,7 @@ function AccountDetail({ acc }: { acc: Account }) {
 }
 
 function IbanDialog({ acc, onClose }: { acc: Account; onClose: () => void }) {
-  const { cfg, money } = useBank();
+  const { cfg, money, t } = useBank();
   const { busy, error, run } = useAction();
   const [iban, setIban] = useState(acc.iban);
   const valid = /^[A-Z0-9]{4,12}$/.test(iban);
@@ -209,18 +207,18 @@ function IbanDialog({ acc, onClose }: { acc: Account; onClose: () => void }) {
   };
 
   return (
-    <Dialog title="Custom IBAN" onClose={onClose}>
+    <Dialog title={t('custom_iban')} onClose={onClose}>
       <form className="dialog-form" onSubmit={submit}>
         <label className="field">
-          <span className="mono muted">4–12 letters or numbers</span>
+          <span className="mono muted">{t('iban_rule')}</span>
           <input autoFocus className="input input-lg mono" maxLength={12} value={iban} onChange={(e) => setIban(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} />
         </label>
         <p className="muted small">
-          Anyone who saved your old IBAN will need the new one. Costs {money(cfg.accounts.ibanFee)}, charged to {acc.name}.
+          {t('iban_note', { amount: money(cfg.accounts.ibanFee), name: acc.name })}
         </p>
         <ErrorLine error={error} />
         <SubmitButton busy={busy} disabled={!valid || iban === acc.iban} icon="edit">
-          Change IBAN · {money(cfg.accounts.ibanFee)}
+          {t('change_iban', { amount: money(cfg.accounts.ibanFee) })}
         </SubmitButton>
       </form>
     </Dialog>
@@ -228,7 +226,7 @@ function IbanDialog({ acc, onClose }: { acc: Account; onClose: () => void }) {
 }
 
 function CreateDialog({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
-  const { cfg, money } = useBank();
+  const { cfg, money, t } = useBank();
   const { busy, error, run } = useAction();
   const [type, setType] = useState<AccountType>('personal');
   const [name, setName] = useState('');
@@ -244,23 +242,23 @@ function CreateDialog({ onClose, onCreated }: { onClose: () => void; onCreated: 
   };
 
   return (
-    <Dialog title="Open an account" onClose={onClose}>
+    <Dialog title={t('open_an_account')} onClose={onClose}>
       <form className="dialog-form" onSubmit={submit}>
-        <div className="seg" role="tablist" aria-label="Account type">
-          {(['personal', 'shared'] as const).map((t) => (
-            <button key={t} type="button" role="tab" aria-selected={type === t} onClick={() => setType(t)}>
-              {TYPE[t]}
+        <div className="seg" role="tablist" aria-label={t('account_type')}>
+          {(['personal', 'shared'] as const).map((k) => (
+            <button key={k} type="button" role="tab" aria-selected={type === k} onClick={() => setType(k)}>
+              {t('type_' + k)}
             </button>
           ))}
         </div>
-        <p className="muted small">{type === 'shared' ? 'Add members and choose exactly what each of them can do.' : 'A second account just for you, e.g. for a business on the side.'}</p>
+        <p className="muted small">{t(type === 'shared' ? 'shared_hint' : 'personal_hint')}</p>
         <label className="field">
-          <span className="mono muted">Account name</span>
-          <input autoFocus className="input" maxLength={28} placeholder={type === 'shared' ? 'e.g. Crew fund' : 'e.g. Rainy day'} value={name} onChange={(e) => setName(e.target.value)} />
+          <span className="mono muted">{t('account_name')}</span>
+          <input autoFocus className="input" maxLength={28} placeholder={t(type === 'shared' ? 'shared_placeholder' : 'personal_placeholder')} value={name} onChange={(e) => setName(e.target.value)} />
         </label>
         <ErrorLine error={error} />
         <SubmitButton busy={busy} disabled={!name.trim()} icon="plus">
-          Open account{cfg.accounts.creationFee ? ` · ${money(cfg.accounts.creationFee)} cash` : ''}
+          {t('open_account')}{cfg.accounts.creationFee ? ' · ' + t('amount_cash', { amount: money(cfg.accounts.creationFee) }) : ''}
         </SubmitButton>
       </form>
     </Dialog>

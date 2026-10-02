@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import gsap from 'gsap';
+import { useBank } from './store';
 
 /* ---------- Scramble: mono labels decode into place ---------- */
 
@@ -89,6 +90,7 @@ export function GridFloor() {
 /* ---------- HoldButton: press and hold to confirm money movement ---------- */
 
 export function HoldButton({ label, onConfirm, disabled, duration = 1.1, variant }: { label: string; onConfirm: () => void; disabled?: boolean; duration?: number; variant?: 'danger' }) {
+  const { t } = useBank();
   const btn = useRef<HTMLButtonElement>(null);
   const fill = useRef<HTMLSpanElement>(null);
   const progress = useRef({ p: 0 });
@@ -146,11 +148,11 @@ export function HoldButton({ label, onConfirm, disabled, duration = 1.1, variant
       onKeyUp={onKeyUp}
     >
       <span>{label}</span>
-      <span className="mono">Hold</span>
+      <span className="mono">{t('hold')}</span>
       {/* Inverted copy revealed left-to-right as the hold progresses. */}
       <span ref={fill} className="hold-fill" aria-hidden="true">
         <span>{label}</span>
-        <span className="mono">Hold</span>
+        <span className="mono">{t('hold')}</span>
       </span>
     </button>
   );

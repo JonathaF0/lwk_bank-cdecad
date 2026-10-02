@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type { Transaction, TxType } from '../nui';
 import { isIncoming, useBank } from '../store';
 import { Icon, type IconName } from '../fx';
@@ -15,17 +15,25 @@ const ICON: Record<TxType, IconName> = {
   fee: 'bill',
 };
 
-const time = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-const day = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
-const startOfDay = (t: number) => new Date(t).setHours(0, 0, 0, 0);
+const startOfDay = (ts: number) => new Date(ts).setHours(0, 0, 0, 0);
 
-export function dayLabel(t: number) {
-  const diff = Math.round((startOfDay(Date.now()) - startOfDay(t)) / 86_400_000);
-  return diff === 0 ? 'Today' : diff === 1 ? 'Yesterday' : day.format(t);
+/** Locale-aware "Today" / "Yesterday" / "Mon, 28 Sep" and HH:MM. */
+export function useDates() {
+  const { t, locale } = useBank();
+  return useMemo(() => {
+    const time = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
+    const day = new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short' });
+    const dayLabel = (ts: number) => {
+      const diff = Math.round((startOfDay(Date.now()) - startOfDay(ts)) / 86_400_000);
+      return diff === 0 ? t('today') : diff === 1 ? t('yesterday') : day.format(ts);
+    };
+    return { dayLabel, time: (ts: number) => time.format(ts) };
+  }, [t, locale]);
 }
 
 export function TxRow({ tx, showDay, action }: { tx: Transaction; showDay?: boolean; action?: ReactNode }) {
-  const { money } = useBank();
+  const { money, t } = useBank();
+  const { dayLabel, time } = useDates();
   const inc = isIncoming(tx.type);
   return (
     <li className={action ? 'tx tx-x' : 'tx'} data-reveal>
@@ -35,10 +43,10 @@ export function TxRow({ tx, showDay, action }: { tx: Transaction; showDay?: bool
       <span className="tx-main">
         <span className="tx-label">{tx.label}</span>
         <span className="tx-sub">
-          {tx.pot === 'savings' && <>Savings · </>}
+          {tx.pot === 'savings' && <>{t('section_savings')} · </>}
           {tx.counterparty && <>{tx.counterparty} · </>}
           {showDay ? `${dayLabel(tx.date)} · ` : ''}
-          {time.format(tx.date)}
+          {time(tx.date)}
         </span>
       </span>
       <span className={`tx-amount num ${inc ? 'is-in' : ''}`}>{money(inc ? tx.amount : -tx.amount, { sign: true })}</span>

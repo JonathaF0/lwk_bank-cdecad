@@ -3,25 +3,26 @@ import { isIncoming, useBank } from '../store';
 import { Icon } from '../fx';
 import { useAction } from '../ui';
 import { AccountPills } from './Overview';
-import { TxRow, dayLabel } from './TxList';
+import { TxRow, useDates } from './TxList';
 import type { SectionProps } from './Bank';
 import type { Transaction } from '../nui';
 
 type Filter = 'all' | 'in' | 'out';
 const FILTERS: [Filter, string][] = [
-  ['all', 'All'],
-  ['in', 'Money in'],
-  ['out', 'Money out'],
+  ['all', 'all'],
+  ['in', 'money_in'],
+  ['out', 'money_out'],
 ];
 type Pot = 'all' | 'checking' | 'savings';
 const POTS: [Pot, string][] = [
-  ['all', 'All'],
-  ['checking', 'Checking'],
-  ['savings', 'Savings'],
+  ['all', 'all'],
+  ['checking', 'checking'],
+  ['savings', 'section_savings'],
 ];
 
 export function Activity({ accountId, setAccountId }: SectionProps) {
-  const { data, cfg, money } = useBank();
+  const { data, cfg, money, t } = useBank();
+  const { dayLabel } = useDates();
   const { run } = useAction();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
@@ -49,7 +50,7 @@ export function Activity({ accountId, setAccountId }: SectionProps) {
       m.set(k, [...(m.get(k) ?? []), t]);
     }
     return [...m];
-  }, [shown]);
+  }, [shown, dayLabel]);
 
   return (
     <div className="panel activity">
@@ -57,19 +58,19 @@ export function Activity({ accountId, setAccountId }: SectionProps) {
         <AccountPills accountId={accountId} setAccountId={setAccountId} />
         <dl className="act-stats" data-reveal>
           <div>
-            <dt className="mono muted">Transactions</dt>
+            <dt className="mono muted">{t('transactions')}</dt>
             <dd className="num">{mine.length}</dd>
           </div>
           <div>
-            <dt className="mono muted">Received</dt>
+            <dt className="mono muted">{t('received')}</dt>
             <dd className="num">{money(received, { sign: true })}</dd>
           </div>
           <div>
-            <dt className="mono muted">Sent</dt>
+            <dt className="mono muted">{t('sent')}</dt>
             <dd className="num">{money(-spent)}</dd>
           </div>
           <div>
-            <dt className="mono muted">Net</dt>
+            <dt className="mono muted">{t('net')}</dt>
             <dd className="num">{money(received - spent, { sign: true })}</dd>
           </div>
         </dl>
@@ -78,22 +79,22 @@ export function Activity({ accountId, setAccountId }: SectionProps) {
       <div className="act-tools" data-reveal>
         <label className="search">
           <Icon name="search" />
-          <span className="sr-only">Search transactions</span>
-          <input className="input" placeholder="Search by name, label or amount" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <span className="sr-only">{t('search_transactions')}</span>
+          <input className="input" placeholder={t('search_placeholder')} value={query} onChange={(e) => setQuery(e.target.value)} />
         </label>
         {cfg.features.savings && (
-          <div className="chips" role="group" aria-label="Account pot">
+          <div className="chips" role="group" aria-label={t('account_pot')}>
             {POTS.map(([id, label]) => (
               <button key={id} className="chip" aria-pressed={pot === id} onClick={() => setPot(id)}>
-                {label}
+                {t(label)}
               </button>
             ))}
           </div>
         )}
-        <div className="chips" role="group" aria-label="Filter">
+        <div className="chips" role="group" aria-label={t('filter')}>
           {FILTERS.map(([id, label]) => (
             <button key={id} className="chip" aria-pressed={filter === id} onClick={() => setFilter(id)}>
-              {label}
+              {t(label)}
             </button>
           ))}
         </div>
@@ -105,13 +106,13 @@ export function Activity({ accountId, setAccountId }: SectionProps) {
             <section key={day} className="act-day">
               <h3 className="mono muted">{day}</h3>
               <ul className="tx-list">
-                {txs.map((t) => (
+                {txs.map((tx) => (
                   <TxRow
-                    key={t.id}
-                    tx={t}
+                    key={tx.id}
+                    tx={tx}
                     action={
                       cfg.features.receipts && (
-                        <button className="icon-btn tx-print" aria-label={`Print receipt for ${t.label}`} data-sound="none" onClick={() => run('receiptPrint', { kind: 'transaction', id: t.id }, 'printer')}>
+                        <button className="icon-btn tx-print" aria-label={t('print_receipt_for', { name: tx.label })} data-sound="none" onClick={() => run('receiptPrint', { kind: 'transaction', id: tx.id }, 'printer')}>
                           <Icon name="print" size={1} />
                         </button>
                       )
@@ -124,7 +125,7 @@ export function Activity({ accountId, setAccountId }: SectionProps) {
         ) : (
           <div className="empty-state" role="status">
             <Icon name="search" size={1.75} />
-            <p>{mine.length ? `Nothing matches “${query || FILTERS.find((f) => f[0] === filter)![1]}”` : 'No transactions on this account yet.'}</p>
+            <p>{mine.length ? t('nothing_matches', { query: query || t(FILTERS.find((f) => f[0] === filter)![1]) }) : t('no_transactions_account')}</p>
             {mine.length > 0 && (
               <button
                 className="btn btn-ghost"
@@ -134,7 +135,7 @@ export function Activity({ accountId, setAccountId }: SectionProps) {
                   setPot('all');
                 }}
               >
-                Clear filters
+                {t('clear_filters')}
               </button>
             )}
           </div>

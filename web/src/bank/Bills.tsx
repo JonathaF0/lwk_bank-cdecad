@@ -2,11 +2,12 @@ import { useBank } from '../store';
 import { CountUp, HoldButton, Icon } from '../fx';
 import { ErrorLine, useAction } from '../ui';
 import { AccountPills } from './Overview';
-import { dayLabel } from './TxList';
+import { useDates } from './TxList';
 import type { SectionProps } from './Bank';
 
 export function Bills({ accountId, setAccountId }: SectionProps) {
-  const { data, cfg, money } = useBank();
+  const { data, cfg, money, t } = useBank();
+  const { dayLabel } = useDates();
   const { busy, error, run } = useAction();
   const acc = data.accounts.find((a) => a.id === accountId) ?? data.accounts[0];
   const unpaid = data.bills.filter((b) => b.status === 'unpaid');
@@ -18,11 +19,11 @@ export function Bills({ accountId, setAccountId }: SectionProps) {
     <div className="panel bills">
       <div className="bl-due">
         <span className="mono muted" data-reveal>
-          Outstanding
+          {t('outstanding')}
         </span>
         <CountUp value={due} format={money} className="balance-xl" />
         <span className="muted" data-reveal>
-          {unpaid.length ? `${unpaid.length} unpaid ${unpaid.length === 1 ? 'bill' : 'bills'}` : "You're all paid up."}
+          {unpaid.length ? t(unpaid.length === 1 ? 'unpaid_bill' : 'unpaid_bills', { count: unpaid.length }) : t('all_paid_up')}
         </span>
 
         <ul className="bill-list">
@@ -39,7 +40,7 @@ export function Bills({ accountId, setAccountId }: SectionProps) {
               </span>
               <span className="num bill-amt">{money(b.amount)}</span>
               <button className="btn btn-ghost btn-sm" disabled={busy || !acc || b.amount > acc.balance} onClick={() => run('billPay', { billId: b.id, accountId: acc!.id }, 'chime')}>
-                Pay
+                {t('pay')}
               </button>
             </li>
           ))}
@@ -47,18 +48,18 @@ export function Bills({ accountId, setAccountId }: SectionProps) {
 
         {unpaid.length > 0 && (
           <div className="bl-payall" data-reveal>
-            <span className="mono muted">Pay from</span>
+            <span className="mono muted">{t('pay_from')}</span>
             <AccountPills accountId={acc?.id ?? ''} setAccountId={setAccountId} />
-            <ErrorLine error={short ? `${acc!.name} is ${money(due - acc!.balance)} short` : error} />
-            <HoldButton label={`Pay all · ${money(due)}`} disabled={busy || short || !acc} onConfirm={() => run('billPayAll', { accountId: acc!.id }, 'chime')} />
+            <ErrorLine error={short ? t('err_short', { name: acc!.name, amount: money(due - acc!.balance) }) : error} />
+            <HoldButton label={t('pay_all', { amount: money(due) })} disabled={busy || short || !acc} onConfirm={() => run('billPayAll', { accountId: acc!.id }, 'chime')} />
           </div>
         )}
       </div>
 
       <aside className="bl-history">
         <div className="section-head" data-reveal>
-          <span className="mono muted">Paid</span>
-          <span className="mono muted">{paid.length} bills</span>
+          <span className="mono muted">{t('paid')}</span>
+          <span className="mono muted">{t('n_bills', { count: paid.length })}</span>
         </div>
         {paid.length ? (
           <ul className="tx-list">
@@ -70,12 +71,12 @@ export function Bills({ accountId, setAccountId }: SectionProps) {
                 <span className="tx-main">
                   <span className="tx-label">{b.issuer}</span>
                   <span className="tx-sub">
-                    {b.label} · paid {dayLabel(b.paidAt ?? b.issuedAt)}
+                    {b.label} · {t('paid_on', { day: dayLabel(b.paidAt ?? b.issuedAt) })}
                   </span>
                 </span>
                 <span className="tx-amount num">{money(b.amount)}</span>
                 {cfg.features.receipts && (
-                  <button className="icon-btn" aria-label={`Print receipt for ${b.issuer}`} data-sound="none" onClick={() => run('receiptPrint', { kind: 'bill', id: b.id }, 'printer')}>
+                  <button className="icon-btn" aria-label={t('print_receipt_for', { name: b.issuer })} data-sound="none" onClick={() => run('receiptPrint', { kind: 'bill', id: b.id }, 'printer')}>
                     <Icon name="print" size={1} />
                   </button>
                 )}
@@ -83,7 +84,7 @@ export function Bills({ accountId, setAccountId }: SectionProps) {
             ))}
           </ul>
         ) : (
-          <p className="empty-note">Paid bills show up here.</p>
+          <p className="empty-note">{t('bills_empty')}</p>
         )}
       </aside>
     </div>

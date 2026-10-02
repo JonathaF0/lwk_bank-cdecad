@@ -7,13 +7,13 @@ import { AmountField, ErrorLine, QuickAmounts, useAction } from '../ui';
 import { AccountPills } from './Overview';
 import type { SectionProps } from './Bank';
 
-const STEPS = ['Recipient', 'Amount', 'Confirm'];
+const STEPS = ['step_recipient', 'step_amount', 'step_confirm'];
 const QUICK = [100, 500, 1_000, 5_000];
 const IBAN_RE = /^[A-Z0-9]{4,12}$/;
 const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
 export function Transfer({ go, accountId, setAccountId }: SectionProps) {
-  const { data, cfg, money } = useBank();
+  const { data, cfg, money, t, locale } = useBank();
   const { busy, error, setError, run } = useAction();
   const root = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(0);
@@ -29,7 +29,7 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
   const draftOk = IBAN_RE.test(draft) && draft !== from?.iban;
   const ibans = [...new Set([...picked, ...(draftOk ? [draft] : [])])];
   const nameOf = (iban: string) => data.contacts.find((c) => c.iban === iban)?.name ?? data.accounts.find((a) => a.iban === iban)?.name ?? iban;
-  const toLabel = ibans.length > 1 ? `${nameOf(ibans[0])} +${ibans.length - 1} more` : ibans[0] ? nameOf(ibans[0]) : '';
+  const toLabel = ibans.length > 1 ? t('name_and_more', { name: nameOf(ibans[0]), count: ibans.length - 1 }) : ibans[0] ? nameOf(ibans[0]) : '';
   const total = amount * ibans.length;
   const over = !!from && total > from.balance;
   const after = (from?.balance ?? 0) - total;
@@ -56,7 +56,7 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
     { scope: root, dependencies: [sent] },
   );
 
-  if (!from) return <div className="panel empty">No account to send from.</div>;
+  if (!from) return <div className="panel empty">{t('no_account_from')}</div>;
 
   const pick = (iban: string) => {
     if (!multi) return setDraft(iban);
@@ -101,7 +101,7 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
           {STEPS.map((s, i) => (
             <li key={s} data-state={i < step ? 'done' : i === step ? 'current' : 'todo'}>
               <button type="button" disabled={i >= step} onClick={() => setStep(i)}>
-                <span className="mono">{String(i + 1).padStart(2, '0')}</span> {s}
+                <span className="mono">{String(i + 1).padStart(2, '0')}</span> {t(s)}
               </button>
             </li>
           ))}
@@ -110,10 +110,10 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
         <form className="step-body" onSubmit={next} data-reveal>
           {step === 0 && (
             <>
-              <h2 className="step-title">{multi ? 'Who are you paying? Pick one or more.' : 'Who are you paying?'}</h2>
+              <h2 className="step-title">{t(multi ? 'who_paying_multi' : 'who_paying')}</h2>
               <div className="iban-row">
                 <label className="field">
-                  <span className="mono muted">Recipient IBAN</span>
+                  <span className="mono muted">{t('recipient_iban')}</span>
                   <input
                     className="input input-lg mono"
                     placeholder={`${cfg.accounts.ibanPrefix}000000`}
@@ -132,24 +132,24 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
                       setDraft('');
                     }}
                   >
-                    <Icon name="plus" /> Add
+                    <Icon name="plus" /> {t('add')}
                   </button>
                 )}
               </div>
 
               {canSave && (
                 <div className="save-contact">
-                  <input className="input" placeholder="Name to save as" maxLength={24} value={contactName} onChange={(e) => setContactName(e.target.value)} />
+                  <input className="input" placeholder={t('save_as_placeholder')} maxLength={24} value={contactName} onChange={(e) => setContactName(e.target.value)} />
                   <button type="button" className="btn btn-ghost" disabled={!contactName.trim() || busy} onClick={saveContact}>
-                    <Icon name="user" /> Save contact
+                    <Icon name="user" /> {t('save_contact')}
                   </button>
                 </div>
               )}
 
               {multi && picked.length > 0 && (
-                <div className="chips" aria-label="Recipients">
+                <div className="chips" aria-label={t('recipients')}>
                   {picked.map((i) => (
-                    <button key={i} type="button" className="chip chip-x" aria-label={`Remove ${nameOf(i)}`} onClick={() => pick(i)}>
+                    <button key={i} type="button" className="chip chip-x" aria-label={t('remove_name', { name: nameOf(i) })} onClick={() => pick(i)}>
                       {nameOf(i)} <Icon name="x" size={0.75} />
                     </button>
                   ))}
@@ -157,7 +157,7 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
               )}
 
               <div className="contacts">
-                <span className="mono muted">{cfg.features.contacts ? 'Contacts & your accounts' : 'Your accounts'}</span>
+                <span className="mono muted">{t(cfg.features.contacts ? 'contacts_and_accounts' : 'your_accounts')}</span>
                 <ul>
                   {recipients
                     .filter((r) => r.own || cfg.features.contacts)
@@ -170,10 +170,10 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
                               {r.own ? <Icon name="card" size={1} /> : initials(r.name)}
                             </span>
                             <span>{r.name}</span>
-                            <span className="mono muted">{r.own ? 'Your account' : r.iban}</span>
+                            <span className="mono muted">{r.own ? t('your_account') : r.iban}</span>
                           </button>
                           {!r.own && (
-                            <button type="button" className="contact-del icon-btn" aria-label={`Delete contact ${r.name}`} onClick={() => run('contactDelete', { contactId: r.id })}>
+                            <button type="button" className="contact-del icon-btn" aria-label={t('delete_contact', { name: r.name })} onClick={() => run('contactDelete', { contactId: r.id })}>
                               <Icon name="trash" size={0.875} />
                             </button>
                           )}
@@ -183,9 +183,9 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
                 </ul>
               </div>
               <div className="step-actions">
-                <ErrorLine error={draft === from.iban ? "That's the account you're sending from" : error} />
+                <ErrorLine error={draft === from.iban ? t('err_sending_account') : error} />
                 <button className="btn btn-primary" disabled={!ibans.length}>
-                  Continue{ibans.length > 1 ? ` · ${ibans.length} people` : ''} <Icon name="right" />
+                  {t('continue')}{ibans.length > 1 ? ' · ' + t('people', { count: ibans.length }) : ''} <Icon name="right" />
                 </button>
               </div>
             </>
@@ -193,21 +193,21 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
 
           {step === 1 && (
             <>
-              <h2 className="step-title">{ibans.length > 1 ? `How much each? (${ibans.length} people)` : 'How much?'}</h2>
+              <h2 className="step-title">{ibans.length > 1 ? t('how_much_each', { count: ibans.length }) : t('how_much')}</h2>
               <AccountPills accountId={from.id} setAccountId={setAccountId} />
               <AmountField amount={amount} setAmount={setAmount} invalid={over} />
               <QuickAmounts values={QUICK} amount={amount} setAmount={setAmount} />
               <label className="field">
-                <span className="mono muted">Note (optional)</span>
-                <input className="input" maxLength={40} placeholder="What's it for?" value={note} onChange={(e) => setNote(e.target.value)} />
+                <span className="mono muted">{t('note_optional')}</span>
+                <input className="input" maxLength={40} placeholder={t('note_placeholder')} value={note} onChange={(e) => setNote(e.target.value)} />
               </label>
               <div className="step-actions">
-                <ErrorLine error={noAccess ? "You don't have transfer access on this account" : over ? `Exceeds ${from.name} balance by ${money(total - from.balance)}` : ''} />
+                <ErrorLine error={noAccess ? t('err_no_transfer_access') : over ? t('err_exceeds_named', { name: from.name, amount: money(total - from.balance) }) : ''} />
                 <button type="button" className="btn btn-ghost" onClick={() => setStep(0)}>
-                  Back
+                  {t('back')}
                 </button>
                 <button className="btn btn-primary" disabled={!amount || over || !!noAccess}>
-                  Review <Icon name="right" />
+                  {t('review')} <Icon name="right" />
                 </button>
               </div>
             </>
@@ -215,17 +215,15 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
 
           {step === 2 && (
             <>
-              <h2 className="step-title">
-                Send {money(total)} to {toLabel}?
-              </h2>
+              <h2 className="step-title">{t('confirm_send', { amount: money(total), name: toLabel })}</h2>
               <p className="muted step-lede">
-                {ibans.length > 1 ? `${money(amount)} goes to each of ${ibans.length} people. ` : ''}Transfers to other players can't be reversed. Hold the button to confirm.
+                {ibans.length > 1 ? t('each_goes', { amount: money(amount), count: ibans.length }) + ' ' : ''}{t('transfer_warning')}
               </p>
               <div className="step-actions step-actions-col">
                 <ErrorLine error={error} />
-                <HoldButton label={busy ? 'Sending…' : `Send ${money(total)}`} disabled={busy} onConfirm={send} />
+                <HoldButton label={busy ? t('sending') : t('send_amount', { amount: money(total) })} disabled={busy} onConfirm={send} />
                 <button type="button" className="btn btn-ghost" onClick={() => setStep(1)} disabled={busy}>
-                  Edit amount
+                  {t('edit_amount')}
                 </button>
               </div>
             </>
@@ -233,37 +231,37 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
         </form>
       </div>
 
-      <aside className="receipt" data-reveal aria-label="Transfer summary">
+      <aside className="receipt" data-reveal aria-label={t('transfer_summary')}>
         <div className="receipt-head">
-          <span className="mono muted">Transfer</span>
-          <span className="mono muted">{new Date().toLocaleDateString('en-GB')}</span>
+          <span className="mono muted">{t('section_transfer')}</span>
+          <span className="mono muted">{new Date().toLocaleDateString(locale)}</span>
         </div>
         <dl>
           <div data-filled="true">
-            <dt className="mono muted">From</dt>
+            <dt className="mono muted">{t('from')}</dt>
             <dd>
               {from.name}
               <span className="mono muted">{from.iban}</span>
             </dd>
           </div>
           <div data-filled={ibans.length > 0}>
-            <dt className="mono muted">To</dt>
+            <dt className="mono muted">{t('to')}</dt>
             <dd>
               {toLabel || '—'}
-              <span className="mono muted">{ibans.length === 1 ? ibans[0] : ibans.length > 1 ? `${ibans.length} recipients` : ''}</span>
+              <span className="mono muted">{ibans.length === 1 ? ibans[0] : ibans.length > 1 ? t('n_recipients', { count: ibans.length }) : ''}</span>
             </dd>
           </div>
           <div data-filled={!!note.trim()}>
-            <dt className="mono muted">Note</dt>
+            <dt className="mono muted">{t('note')}</dt>
             <dd>{note.trim() || '—'}</dd>
           </div>
         </dl>
         <div className="receipt-total">
-          <span className="mono muted">{ibans.length > 1 ? `Total · ${money(amount)} each` : 'Amount'}</span>
+          <span className="mono muted">{ibans.length > 1 ? t('total_each', { amount: money(amount) }) : t('amount')}</span>
           <span className="receipt-amount num">{money(total)}</span>
         </div>
         <div className="receipt-after">
-          <span className="mono muted">Balance after</span>
+          <span className="mono muted">{t('balance_after')}</span>
           <span className={`num ${after < 0 ? 'is-neg' : ''}`}>{money(after)}</span>
         </div>
         <div className="receipt-tear" aria-hidden="true" />
@@ -276,15 +274,15 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
             <path className="sent-check" d="M38 62 53 76 83 45" pathLength={1} />
           </svg>
           <span className="mono muted" data-in>
-            Transfer sent
+            {t('transfer_sent')}
           </span>
           <CountUp value={sent.amount} format={money} className="sent-amount" />
           <span className="sent-to" data-in>
-            to {sent.to}
+            {t('to_name', { name: sent.to })}
           </span>
           <div className="sent-actions" data-in>
             <button className="btn btn-ghost" onClick={reset}>
-              New transfer
+              {t('new_transfer')}
             </button>
             <button
               className="btn btn-primary"
@@ -293,7 +291,7 @@ export function Transfer({ go, accountId, setAccountId }: SectionProps) {
                 go('overview');
               }}
             >
-              Back to overview
+              {t('back_to_overview')}
             </button>
           </div>
         </div>

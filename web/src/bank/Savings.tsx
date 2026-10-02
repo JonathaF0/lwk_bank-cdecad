@@ -8,14 +8,14 @@ import { AccountPills } from './Overview';
 import type { SectionProps } from './Bank';
 
 export function Savings({ accountId, setAccountId }: SectionProps) {
-  const { data, cfg, money } = useBank();
+  const { data, cfg, money, t } = useBank();
   const { busy, error, run } = useAction();
   const [dir, setDir] = useState<'in' | 'out'>('in');
   const [amount, setAmount] = useState(0);
   const [newGoal, setNewGoal] = useState(false);
   const [moving, setMoving] = useState<{ goal: Goal; dir: 'in' | 'out' } | null>(null);
   const acc = data.accounts.find((a) => a.id === accountId) ?? data.accounts[0];
-  if (!acc) return <div className="panel empty">No accounts yet.</div>;
+  if (!acc) return <div className="panel empty">{t('no_accounts')}</div>;
 
   const inGoals = acc.goals.reduce((s, g) => s + g.saved, 0);
   const total = acc.savings + inGoals;
@@ -40,50 +40,50 @@ export function Savings({ accountId, setAccountId }: SectionProps) {
 
         <div className="sv-total">
           <span className="mono muted" data-reveal>
-            Total saved
+            {t('total_saved')}
           </span>
           <CountUp key={acc.id} value={total} format={money} className="balance-xl" />
           <div className="sv-meta" data-reveal>
             <span className="pill-stat">
-              <Icon name="spark" size={0.875} /> {rate}% weekly
+              <Icon name="spark" size={0.875} /> {t('rate_weekly', { rate })}
             </span>
-            <span className="pill-stat">≈ {money(Math.round((total * rate) / 100))} next payout</span>
+            <span className="pill-stat">{t('next_payout', { amount: money(Math.round((total * rate) / 100)) })}</span>
             {acc.nextInterestAt && (
               <span className="pill-stat">
-                <Icon name="clock" size={0.875} /> in {timeUntil(acc.nextInterestAt)}
+                <Icon name="clock" size={0.875} /> {t('in_time', { time: timeUntil(acc.nextInterestAt) })}
               </span>
             )}
           </div>
         </div>
 
         <form className="sv-move" onSubmit={submit} data-reveal>
-          <div className="seg seg-sm" role="tablist" aria-label="Direction">
+          <div className="seg seg-sm" role="tablist" aria-label={t('direction')}>
             <button type="button" role="tab" aria-selected={dir === 'in'} onClick={() => setDir('in')}>
-              Checking → Savings
+              {t('checking_to_savings')}
             </button>
             <button type="button" role="tab" aria-selected={dir === 'out'} onClick={() => setDir('out')}>
-              Savings → Checking
+              {t('savings_to_checking')}
             </button>
           </div>
           <div className="sv-move-row">
             <AmountField amount={amount} setAmount={setAmount} invalid={over} autoFocus={false} />
             <button className="btn btn-primary" disabled={!amount || over || busy || !allowed} aria-busy={busy}>
-              {busy ? <span className="spinner" aria-hidden="true" /> : <Icon name={dir === 'in' ? 'in' : 'out'} />} Move
+              {busy ? <span className="spinner" aria-hidden="true" /> : <Icon name={dir === 'in' ? 'in' : 'out'} />} {t('move')}
             </button>
           </div>
           <span className="mono muted">
-            Available {money(max)} · unallocated savings {money(acc.savings)}
+            {t('available_unallocated', { amount: money(max), savings: money(acc.savings) })}
           </span>
-          <ErrorLine error={!allowed ? "You don't have access to move this account's money" : over ? `Only ${money(max)} available` : error} />
+          <ErrorLine error={!allowed ? t('err_no_move_access') : over ? t('err_only_available', { amount: money(max) }) : error} />
         </form>
 
         <div className="sv-history" data-reveal>
           <div className="section-head">
-            <span className="mono muted">Interest earned</span>
-            <span className="mono muted">{money(acc.interestHistory.reduce((s, h) => s + h.amount, 0))} all time</span>
+            <span className="mono muted">{t('interest_earned')}</span>
+            <span className="mono muted">{t('all_time', { amount: money(acc.interestHistory.reduce((s, h) => s + h.amount, 0)) })}</span>
           </div>
           {history.length ? (
-            <div className="bars" role="img" aria-label={`Weekly interest: ${history.map((h) => money(h.amount)).join(', ')}`}>
+            <div className="bars" role="img" aria-label={t('weekly_interest_aria', { list: history.map((h) => money(h.amount)).join(', ') })}>
               {history.map((h, i) => (
                 <div key={h.date} className="bar" style={{ ['--h' as string]: h.amount / peak, ['--d' as string]: `${i * 60}ms` }}>
                   <span className="bar-val mono">{money(h.amount)}</span>
@@ -91,16 +91,16 @@ export function Savings({ accountId, setAccountId }: SectionProps) {
               ))}
             </div>
           ) : (
-            <p className="empty-note">Interest shows up here after your first weekly payout.</p>
+            <p className="empty-note">{t('interest_empty')}</p>
           )}
         </div>
       </div>
 
       <aside className="sv-goals">
         <div className="section-head" data-reveal>
-          <span className="mono muted">Goals · {money(inGoals)}</span>
+          <span className="mono muted">{t('goals_total', { amount: money(inGoals) })}</span>
           <button className="link mono" onClick={() => setNewGoal(true)} disabled={!acc.perms.deposit}>
-            + New goal
+            {t('new_goal_link')}
           </button>
         </div>
         {acc.goals.length ? (
@@ -113,21 +113,21 @@ export function Savings({ accountId, setAccountId }: SectionProps) {
                     <span className="goal-name">
                       <Icon name="target" size={1} /> {g.name}
                     </span>
-                    <span className={`mono ${pct >= 100 ? 'is-done' : 'muted'}`}>{pct >= 100 ? 'Reached' : `${pct}%`}</span>
+                    <span className={`mono ${pct >= 100 ? 'is-done' : 'muted'}`}>{pct >= 100 ? t('reached') : `${pct}%`}</span>
                   </div>
-                  <Progress value={g.saved} max={g.target} label={`${g.name} progress`} />
+                  <Progress value={g.saved} max={g.target} label={t('goal_progress', { name: g.name })} />
                   <div className="goal-bottom">
                     <span className="num">
-                      {money(g.saved)} <span className="muted">of {money(g.target)}</span>
+                      {money(g.saved)} <span className="muted">{t('of_amount', { amount: money(g.target) })}</span>
                     </span>
                     <span className="goal-actions">
-                      <button className="icon-btn" aria-label={`Add to ${g.name}`} onClick={() => setMoving({ goal: g, dir: 'in' })} disabled={!acc.perms.deposit}>
+                      <button className="icon-btn" aria-label={t('add_to', { name: g.name })} onClick={() => setMoving({ goal: g, dir: 'in' })} disabled={!acc.perms.deposit}>
                         <Icon name="plus" size={1} />
                       </button>
-                      <button className="icon-btn" aria-label={`Take from ${g.name}`} onClick={() => setMoving({ goal: g, dir: 'out' })} disabled={!acc.perms.withdraw || !g.saved}>
+                      <button className="icon-btn" aria-label={t('take_from', { name: g.name })} onClick={() => setMoving({ goal: g, dir: 'out' })} disabled={!acc.perms.withdraw || !g.saved}>
                         <Icon name="minus" size={1} />
                       </button>
-                      <button className="icon-btn" aria-label={`Delete ${g.name}`} onClick={() => run('goalDelete', { goalId: g.id })} disabled={busy || !acc.perms.withdraw}>
+                      <button className="icon-btn" aria-label={t('delete_name', { name: g.name })} onClick={() => run('goalDelete', { goalId: g.id })} disabled={busy || !acc.perms.withdraw}>
                         <Icon name="trash" size={1} />
                       </button>
                     </span>
@@ -139,7 +139,7 @@ export function Savings({ accountId, setAccountId }: SectionProps) {
         ) : (
           <div className="empty-state" data-reveal>
             <Icon name="target" size={1.75} />
-            <p>Set a goal for that car, house or rainy day.</p>
+            <p>{t('goals_empty')}</p>
           </div>
         )}
       </aside>
@@ -151,6 +151,7 @@ export function Savings({ accountId, setAccountId }: SectionProps) {
 }
 
 function GoalDialog({ accountId, onClose }: { accountId: string; onClose: () => void }) {
+  const { t } = useBank();
   const { busy, error, run } = useAction();
   const [name, setName] = useState('');
   const [target, setTarget] = useState(0);
@@ -162,17 +163,17 @@ function GoalDialog({ accountId, onClose }: { accountId: string; onClose: () => 
   };
 
   return (
-    <Dialog title="New savings goal" onClose={onClose}>
+    <Dialog title={t('new_goal_title')} onClose={onClose}>
       <form className="dialog-form" onSubmit={submit}>
         <label className="field">
-          <span className="mono muted">What are you saving for?</span>
-          <input autoFocus className="input" maxLength={32} placeholder="e.g. Vinewood Hills house" value={name} onChange={(e) => setName(e.target.value)} />
+          <span className="mono muted">{t('goal_name_label')}</span>
+          <input autoFocus className="input" maxLength={32} placeholder={t('goal_name_placeholder')} value={name} onChange={(e) => setName(e.target.value)} />
         </label>
-        <span className="mono muted">Target</span>
-        <AmountField amount={target} setAmount={setTarget} label="Target" autoFocus={false} />
+        <span className="mono muted">{t('target')}</span>
+        <AmountField amount={target} setAmount={setTarget} label={t('target')} autoFocus={false} />
         <ErrorLine error={error} />
         <SubmitButton busy={busy} disabled={!name.trim() || !target} icon="target">
-          Create goal
+          {t('create_goal')}
         </SubmitButton>
       </form>
     </Dialog>
@@ -180,7 +181,7 @@ function GoalDialog({ accountId, onClose }: { accountId: string; onClose: () => 
 }
 
 function GoalMoveDialog({ goal, dir, checking, onClose }: { goal: Goal; dir: 'in' | 'out'; checking: number; onClose: () => void }) {
-  const { money } = useBank();
+  const { money, t } = useBank();
   const { busy, error, run } = useAction();
   const [amount, setAmount] = useState(0);
   const max = dir === 'in' ? Math.min(checking, Math.max(goal.target - goal.saved, 0) || checking) : goal.saved;
@@ -193,20 +194,20 @@ function GoalMoveDialog({ goal, dir, checking, onClose }: { goal: Goal; dir: 'in
   };
 
   return (
-    <Dialog title={dir === 'in' ? `Add to ${goal.name}` : `Take from ${goal.name}`} onClose={onClose}>
+    <Dialog title={t(dir === 'in' ? 'add_to' : 'take_from', { name: goal.name })} onClose={onClose}>
       <form className="dialog-form" onSubmit={submit}>
         <AmountField amount={amount} setAmount={setAmount} invalid={over} />
         <div className="chips">
           <button type="button" className="chip" aria-pressed={amount === max} onClick={() => setAmount(max)}>
-            {dir === 'in' ? 'Finish goal' : 'All'} · {money(max)}
+            {t(dir === 'in' ? 'finish_goal' : 'all')} · {money(max)}
           </button>
         </div>
         <span className="mono muted">
-          {dir === 'in' ? `From checking · ${money(checking)} available` : `Back to checking · ${money(goal.saved)} in goal`}
+          {dir === 'in' ? t('from_checking', { amount: money(checking) }) : t('back_to_checking', { amount: money(goal.saved) })}
         </span>
-        <ErrorLine error={over ? 'More than is available' : error} />
+        <ErrorLine error={over ? t('err_more_than_available') : error} />
         <SubmitButton busy={busy} disabled={!amount || over} icon={dir === 'in' ? 'in' : 'out'}>
-          {dir === 'in' ? 'Add' : 'Take'} {amount ? money(amount) : ''}
+          {t(dir === 'in' ? 'add' : 'take')} {amount ? money(amount) : ''}
         </SubmitButton>
       </form>
     </Dialog>

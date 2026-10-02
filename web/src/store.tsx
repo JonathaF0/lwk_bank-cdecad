@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
 import { callBank, type BankData, type Result } from './nui';
 import { play, type SoundName } from './sound';
+import { makeT, type T } from './i18n';
 
 interface BankCtx {
   data: BankData;
@@ -11,9 +12,21 @@ interface BankCtx {
    */
   act: (event: string, payload: unknown, sound?: SoundName) => Promise<Result>;
   money: (n: number, opts?: { sign?: boolean }) => string;
+  /** Translated UI string (locales/<code>.json -> "ui"). */
+  t: T;
+  /** Intl locale for numbers and dates, e.g. 'de-DE'. */
+  locale: string;
 }
 
 const Ctx = createContext<BankCtx | null>(null);
+
+function safeLocale(l?: string) {
+  try {
+    return Intl.NumberFormat.supportedLocalesOf(l ?? '').length ? l! : 'en-US';
+  } catch {
+    return 'en-US';
+  }
+}
 
 export function BankProvider({ data, setData, children }: { data: BankData; setData: (d: BankData) => void; children: ReactNode }) {
   const act = useCallback(
@@ -29,18 +42,21 @@ export function BankProvider({ data, setData, children }: { data: BankData; setD
   );
 
   const currency = data.config.currency;
+  const locale = safeLocale(data.config.locale);
   const money = useMemo(() => {
     let f: Intl.NumberFormat;
     try {
-      f = new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 });
+      f = new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 0 });
     } catch {
       // A typo'd currency code in config.lua shouldn't take the whole UI down.
-      f = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+      f = new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
     }
     return (n: number, opts?: { sign?: boolean }) => (opts?.sign && n > 0 ? '+' : n < 0 ? '−' : '') + f.format(Math.abs(n));
-  }, [currency]);
+  }, [currency, locale]);
 
-  return <Ctx.Provider value={{ data, cfg: data.config, act, money }}>{children}</Ctx.Provider>;
+  const t = useMemo(() => makeT(data.ui), [data.ui]);
+
+  return <Ctx.Provider value={{ data, cfg: data.config, act, money, t, locale }}>{children}</Ctx.Provider>;
 }
 
 export function useBank() {

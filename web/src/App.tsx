@@ -1,20 +1,23 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { fetchNui, isBrowser, normalize, useNuiMessage, type BankData } from './nui';
-import { BankProvider } from './store';
-import { GridFloor } from './fx';
+import { BankProvider, useBank } from './store';
+import { GridFloor, Icon } from './fx';
 import { Bank } from './bank/Bank';
 import { Atm } from './atm/Atm';
-import { DevBar } from './DevBar';
 import { accentTokens } from './logic';
 import { configureSound, play, preloadSounds, type SoundName } from './sound';
 
 type Mode = 'bank' | 'atm';
+// Browser dev toolbar; import.meta.env.DEV is false in the build, so it's never bundled.
+const DevBar = import.meta.env.DEV ? lazy(() => import('./DevBar').then((m) => ({ default: m.DevBar }))) : null;
+type Incoming = { id: number; amount: number; from: string };
 
 export function App() {
   const [data, setData] = useState<BankData | null>(null);
   const [mode, setMode] = useState<Mode | null>(null);
+  const [incoming, setIncoming] = useState<Incoming | null>(null);
   const scene = useRef<HTMLDivElement>(null);
   const intro = useRef<gsap.core.Timeline | null>(null);
   // useGSAP's revert also seeks the old intro back to 0, which fires onReverseComplete;
@@ -23,6 +26,10 @@ export function App() {
 
   useNuiMessage((msg) => {
     if (msg.action === 'close') return close();
+    if (msg.action === 'incoming') {
+      play('chime');
+      return setIncoming({ id: Date.now(), amount: msg.amount, from: msg.from });
+    }
     if (!('data' in msg)) return;
     setData(normalize(msg.data));
     if (msg.action === 'open' || msg.action === 'openAtm') {
@@ -92,16 +99,47 @@ export function App() {
 
   return (
     <>
-      {isBrowser && <DevBar />}
+      {DevBar && isBrowser && (
+        <Suspense fallback={null}>
+          <DevBar />
+        </Suspense>
+      )}
       {mode && data && (
         <BankProvider data={data} setData={setData}>
           <div ref={scene} className="scene">
             <div className="vignette" />
             <GridFloor />
             {mode === 'bank' ? <Bank onClose={close} /> : <Atm onClose={close} />}
+            {incoming && <IncomingToast key={incoming.id} incoming={incoming} onDone={() => setIncoming(null)} />}
           </div>
         </BankProvider>
       )}
     </>
+  );
+}
+
+/** "+$750 from Lena Park" while the bank is open; the client notifies instead when it's closed. */
+function IncomingToast({ incoming, onDone }: { incoming: Incoming; onDone: () => void }) {
+  const { money, t } = useBank();
+  const ref = useRef<HTMLDivElement>(null);
+  useGSAP(
+    () => {
+      gsap
+        .timeline({ onComplete: onDone })
+        .fromTo(ref.current, { y: -24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'expo.out' })
+        .to(ref.current, { y: -24, opacity: 0, duration: 0.4, ease: 'power2.in' }, '+=3.2');
+    },
+    { scope: ref },
+  );
+  return (
+    <div ref={ref} className="toast" role="status">
+      <span className="tx-icon is-in">
+        <Icon name="in" />
+      </span>
+      <span>
+        <strong className="num">{money(incoming.amount, { sign: true })}</strong>
+        <span className="muted"> {t('from_name', { name: incoming.from })}</span>
+      </span>
+    </div>
   );
 }
