@@ -153,6 +153,30 @@ function Bridge.getJob(src)
     return { name = j.name, label = j.label, grade = j.grade and j.grade.level or 0, isBoss = j.isboss == true }
 end
 
+--- The player's gang (QBCore/Qbox only), or nil.
+function Bridge.getGang(src)
+    if fw ~= 'qb' and fw ~= 'qbox' then return nil end
+    local p = player(src)
+    local g = p and p.PlayerData.gang
+    if not g or not g.name or g.name == 'none' then return nil end
+    return { name = g.name, label = g.label, isBoss = g.isboss == true }
+end
+
+--- Label of a job or gang, or nil when the framework has no group by that name.
+function Bridge.groupLabel(name)
+    if type(name) ~= 'string' then return nil end
+    core()
+    local g
+    if fw == 'qbox' then
+        g = exports.qbx_core:GetJob(name) or exports.qbx_core:GetGang(name)
+    elseif fw == 'qb' then
+        g = QB.Shared.Jobs[name] or QB.Shared.Gangs[name]
+    elseif fw == 'esx' then
+        g = ESX.GetJobs()[name]
+    end
+    return g and g.label
+end
+
 function Bridge.isAdmin(src)
     if IsPlayerAceAllowed(src, Cfg().admin.ace) then return true end
     local p = player(src)

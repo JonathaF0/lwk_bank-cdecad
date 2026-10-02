@@ -44,10 +44,12 @@ end
 function Accounts.accessOf(src, identifier, row, memberPerms)
     if row.owner == identifier then return 'owner', ALL end
     if row.type == 'business' then
-        local job = Bridge.getJob(src)
-        if job and job.name == row.owner then
-            if job.isBoss then return 'owner', ALL end
-            return 'member', Cfg().business.employeePerms
+        -- Business accounts belong to a job, or (QBCore/Qbox) a gang.
+        for _, group in ipairs({ Bridge.getJob(src) or false, Bridge.getGang(src) or false }) do
+            if group and group.name == row.owner then
+                if group.isBoss then return 'owner', ALL end
+                return 'member', Cfg().business.employeePerms
+            end
         end
     end
     if memberPerms then return 'member', decodePerms(memberPerms) end
@@ -57,14 +59,17 @@ end
 --- Every account the player can open, each with role/perms attached.
 function Accounts.visible(src, identifier)
     Accounts.ensureDefault(identifier)
-    local job = Bridge.getJob(src)
-    if job and job.isBoss and Cfg().features.business then Business.ensure(job) end
+    local job, gang = Bridge.getJob(src), Bridge.getGang(src)
+    if Cfg().features.business then
+        if job and job.isBoss then Business.ensure(job) end
+        if gang and gang.isBoss then Business.ensure(gang) end
+    end
     local rows = MySQL.query.await([[
         SELECT a.*, m.perms AS member_perms
         FROM lwk_bank_accounts a
         LEFT JOIN lwk_bank_members m ON m.account_id = a.id AND m.identifier = ?
-        WHERE a.owner = ? OR m.identifier IS NOT NULL OR (a.type = 'business' AND a.owner = ?)
-        ORDER BY a.is_default DESC, a.id ASC]], { identifier, identifier, job and job.name or '' })
+        WHERE a.owner = ? OR m.identifier IS NOT NULL OR (a.type = 'business' AND a.owner IN (?, ?))
+        ORDER BY a.is_default DESC, a.id ASC]], { identifier, identifier, job and job.name or '', gang and gang.name or '' })
     local out = {}
     for _, row in ipairs(rows) do
         local role, perms = Accounts.accessOf(src, identifier, row, row.member_perms)
