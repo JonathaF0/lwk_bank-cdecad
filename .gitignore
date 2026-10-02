@@ -3,3 +3,7 @@ brag-output*/
 graphify-out/
 .claude/
 *.log
+.env
+.env.*
+*.pem
+*.key
