@@ -254,6 +254,14 @@ In `/bankconfig` → Logs:
 
 Free support is available in the [LWK Development Discord](https://discord.gg/99EuV7rzSp). Please include your framework, inventory, target, and any F8/server console errors.
 
+## Recommended Hosting
+
+I recommend and personally use [RocketNode](https://rocketnode.us/lwkdev) for hosting your FiveM server running this resource. Use code **LWKDEV** for 25% off.
+
+![LWK Dev](.github/rocketnode.webp)
+
+---
+
 ## License
 
 [MIT](LICENSE)
