@@ -65,6 +65,10 @@ RegisterNetEvent('lwk_bank:forceClose', function()
     end
 end)
 
+RegisterNetEvent('lwk_bank:adminInfo', function(text)
+    lib.alertDialog({ header = Config.bankName, content = text, centered = true, size = 'lg' })
+end)
+
 AddEventHandler('onResourceStop', function(res)
     if res == GetCurrentResourceName() and isOpen then SetNuiFocus(false, false) end
 end)

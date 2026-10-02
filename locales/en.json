@@ -100,7 +100,20 @@
     "target_bank": "Open bank",
     "target_atm": "Use ATM",
     "prompt_bank": "[E] Bank",
-    "prompt_atm": "[E] ATM"
+    "prompt_atm": "[E] ATM",
+    "err_no_permission": "You don't have permission to do that.",
+    "cmd_lookup_help": "Look up a player's accounts, cards and loans",
+    "cmd_pin_help": "Reset a card PIN (the owner gets the new one)",
+    "cmd_unfreeze_help": "Unfreeze a card frozen by wrong PINs",
+    "cmd_score_help": "Set a player's credit score",
+    "cmd_target_help": "Server ID, or citizenid/identifier for offline players",
+    "cmd_last4_help": "Last 4 digits of the card",
+    "admin_score": "Credit score: %s",
+    "admin_framework_bank": "framework bank",
+    "admin_savings": "savings",
+    "admin_pin_sent": "New PIN sent to the player.",
+    "admin_pin_offline": "Player is offline. New PIN: %s",
+    "admin_done": "Done."
   },
   "ui": {}
 }
