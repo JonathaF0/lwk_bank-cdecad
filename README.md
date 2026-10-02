@@ -11,8 +11,10 @@ Works with **Qbox, QBCore and ESX** (detected automatically).
 - **Cards** in three tiers. Each card has a PIN, a daily limit, freeze, renewal, auto-renew, and is a real inventory item (ox / qb / qs). There's also a no-items mode.
 - **Savings** with weekly interest and savings goals.
 - **Loans** with plans, terms, a 300–850 credit score that moves with how you pay, a grace period, late fees and auto-collection.
-- **Bills** read from okokBilling, esx_billing or QBCore phone invoices. Pay one or all of them, and print receipts as items.
-- **Accounts**: personal, shared (members with per-permission access) and business accounts for job bosses. On ESX, business accounts use `esx_addonaccount`, so boss menus keep working.
+- **Bills** read from okokBilling, esx_billing or QBCore phone invoices, plus financed vehicles from jg-dealerships. Pay one or all of them, and print receipts as items.
+- **Accounts**: personal, shared (members with per-permission access) and business accounts for job and gang bosses. On ESX, business accounts use `esx_addonaccount`, so boss menus keep working.
+- **Drop-in replacement** for Renewed-Banking, qb-banking, qb-management and okokBanking: scripts that call their exports keep working, and `/bankimport` brings their balances over.
+- **Notifications** through ox_lib, okokNotify, wasabi_notify, or the ESX / QBCore / Qbox built-ins.
 - **Logs** to a Discord webhook and/or ox_lib's logger. Big amounts are flagged.
 - **Admin tools**: `/bankconfig` (in-game settings), plus commands to look up players, reset PINs, unfreeze cards and set credit scores.
 - **Translations**: every string lives in `locales/<code>.json`, and dates and money use the language's own formats.
@@ -45,7 +47,7 @@ Works with **Qbox, QBCore and ESX** (detected automatically).
    ```
    On ESX, the `admin` and `superadmin` groups also work (see `admin.esxGroups` in `config.lua`).
 4. **Add the items** (skip this if you don't use an inventory). See [Items](#items) below.
-5. **Remove your old bank** (qb-banking, Renewed-Banking, esx_banking, okokBanking...) so two banks don't fight over the same counters. If another script calls your old bank's exports, switch it to [LWK Bank's exports](#exports).
+5. **Remove your old bank** so two banks don't fight over the same counters and exports. Coming from Renewed-Banking, qb-banking, qb-management or okokBanking? Other scripts that call its exports keep working with LWK Bank, and you can bring the balances over: see [Switching from another bank](#switching-from-another-bank).
 6. **Restart the server.** The database tables are created automatically on first start. `sql/install.sql` is there if you'd rather run it yourself.
 
 That's it. Join the server, walk up to a bank counter or ATM, and press the target or E.
@@ -89,7 +91,7 @@ You have two options:
 
 - **In game (recommended):** type **`/bankconfig`**. Every option has a label and a short explanation. Changes apply instantly for everyone, with no restart. "Add bank here" saves your current position as a new bank counter. "Reset to defaults" goes back to `config.lua`.
 - **`config.lua`:** the defaults. Anything saved in-game overrides this file. A few things can only be set here, because changing them live could break the server or lock staff out:
-  - `framework`, `inventory`, `target`, `billing` (all `auto` by default)
+  - `framework`, `inventory`, `target`, `billing`, `notify` (all `auto` by default)
   - `debug` (adds `/bank` and `/atm` test commands)
   - `admin` (who counts as staff)
   - `interestDay` (needs a restart)
@@ -114,6 +116,42 @@ Missing strings fall back to English, so a half-done translation still works. Pu
 
 Change `bankName`, `accent` (any hex colour; text on it switches between dark and light automatically) and `currency` (any ISO code, e.g. `EUR`) in `/bankconfig` → General.
 
+### Notifications
+
+`notify` in `config.lua` picks where messages appear: `ox` (ox_lib), `okok` (okokNotify), `wasabi` (wasabi_notify), `esx` or `qb` (the framework's own; on Qbox, `qb` uses qbx_core's). `auto` uses okokNotify or wasabi_notify if one is running, otherwise ox_lib.
+
+## Switching from another bank
+
+LWK Bank replaces **Renewed-Banking, qb-banking, qb-management and okokBanking**. It `provide`s their names and answers their exports. So job scripts, boss menus, shops (e.g. lation_shops) and anything else written for your old bank keep working, with their money in LWK Bank business accounts:
+
+| Old bank | Exports that keep working |
+| --- | --- |
+| Renewed-Banking | `getAccountMoney`, `addAccountMoney`, `removeAccountMoney`, `handleTransaction`, `GetJobAccount`, `CreateJobAccount`, `addAccountMember`, `removeAccountMember`, `getAccountTransactions`, `changeAccountName` |
+| qb-banking | `AddMoney`, `RemoveMoney`, `AddGangMoney`, `RemoveGangMoney`, `GetAccount`, `GetGangAccount`, `GetAccountBalance`, `CreatePlayerAccount`, `CreateJobAccount`, `CreateGangAccount`, `CreateBankStatement` |
+| qb-management | `GetAccount`, `GetGangAccount`, `AddMoney`, `RemoveMoney`, `AddGangMoney`, `RemoveGangMoney` |
+| okokBanking | `GetAccount`, `AddMoney`, `RemoveMoney`, `AddTransaction`, `GetPlayerTransactions` |
+
+**Steps:**
+
+1. Stop the server, remove the old bank from `resources` (or its `ensure` line), and add LWK Bank. If both are running, LWK Bank prints a warning on start.
+2. Start the server and preview the import from the server console (or in game as an admin):
+   ```
+   bankimport renewed
+   ```
+   Sources: `renewed`, `qb` (qb-banking), `qbmanagement` (older qb-management `management_funds`), `okok`. The preview changes nothing. It shows how many accounts of each type would come over and how much money.
+3. Run it for real:
+   ```
+   bankimport renewed confirm
+   ```
+   Society, job and gang balances go to business accounts. Shared accounts keep their owner and members, and extra player accounts come over as personal accounts. Each source imports once; add `force` to repeat it.
+
+Players' main bank balance is framework money in all of these banks, so it is already in LWK Bank and isn't imported. If the preview lists a type that is really players' main account (okokBanking stores one per player, usually `personal`), leave it out so it isn't counted twice: `bankimport okok confirm skip=personal`.
+
+## Works with
+
+- **jg-dealerships**: every financed vehicle's next payment shows up under Bills. Paying it goes through jg-dealerships itself, from any of the player's accounts.
+- **lation_shops**: shop balances use LWK Bank through its Renewed-Banking / qb-banking / okokBanking support, and shop purchases or sales paid by bank show up in the player's activity.
+
 ## Commands
 
 | Command | Who | What |
@@ -123,6 +161,7 @@ Change `bankName`, `accent` (any hex colour; text on it switches between dark an
 | `/bankpin <id or identifier> <last 4>` | admins | Reset a card's PIN (the new PIN is sent to the player) |
 | `/bankunfreeze <id or identifier> <last 4>` | admins | Unfreeze a card that was locked by wrong PINs |
 | `/bankscore <id or identifier> <300-850>` | admins | Set a credit score |
+| `/bankimport <source> [confirm] [skip=…] [force]` | admins, console | Import balances from another bank (see above) |
 | `/bank`, `/atm` | everyone, only with `debug = true` | Open without walking to one |
 
 Every admin action is logged.
