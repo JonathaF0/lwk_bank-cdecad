@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchNui, type AdminConfig, type Result } from '../nui';
 import { makeT, type T } from '../i18n';
 import { Brand, Icon } from '../fx';
 import { ErrorLine, Toggle } from '../ui';
-import { play } from '../sound';
+import { configureSound, play } from '../sound';
 
 /* /bankconfig: an editor generated from the config's own shape. Booleans become toggles,
  * numbers and strings inputs, lists of rows tables, lists of values comma lists.
@@ -59,6 +59,15 @@ export function ConfigEditor({ data, setData, onClose }: { data: AdminConfig; se
     setDraft((d) => setIn(d, path, v));
     setSaved(false);
   };
+
+  // Sound settings apply while editing, with a tick, so the admin hears the new volume.
+  const sound = JSON.stringify(draft.sound);
+  const first = useRef(true);
+  useEffect(() => {
+    configureSound(JSON.parse(sound));
+    if (!first.current) play('tap');
+    first.current = false;
+  }, [sound]);
 
   const send = async (event: 'adminConfigSave' | 'adminConfigReset', payload?: unknown) => {
     setBusy(true);
@@ -191,7 +200,11 @@ function Field({ ctx, name, path, value, template }: { ctx: FieldCtx; name: stri
       <span className="mono muted">{label(name)}</span>
       <span className="cfg-input">
         {name === 'accent' && <input type="color" className="cfg-color" value={String(value)} onChange={(e) => update(path, e.target.value)} aria-label={label(name)} />}
-        <ScalarInput value={value} onChange={(v) => update(path, v)} />
+        {name === 'volume' && typeof value === 'number' ? (
+          <input type="range" className="range" min={0} max={1} step={0.05} value={value} aria-label={label(name)} onChange={(e) => update(path, Number(e.target.value))} />
+        ) : (
+          <ScalarInput value={value} onChange={(v) => update(path, v)} />
+        )}
       </span>
       {h && <span className="muted small">{h}</span>}
     </label>

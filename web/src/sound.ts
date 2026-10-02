@@ -43,16 +43,19 @@ const TUNE: Partial<Record<SoundName, { gain?: number; offset?: number; length?:
   cardOut: { gain: 1.8 },
 };
 
+/** Ears hear loudness logarithmically: squaring makes the 0-1 setting feel even. 0.5 = default. */
+const masterGain = () => 0.8 * settings.volume ** 2;
+
 export function configureSound(s: { enabled: boolean; volume: number }) {
-  settings = { enabled: s.enabled, volume: Math.min(Math.max(s.volume, 0), 1) };
-  if (master) master.gain.value = settings.volume * 0.6;
+  settings = { enabled: s.enabled, volume: Math.min(Math.max(Number(s.volume) || 0, 0), 1) };
+  if (master) master.gain.value = masterGain();
 }
 
 function audio() {
   if (!ctx) {
     ctx = new AudioContext();
     master = ctx.createGain();
-    master.gain.value = settings.volume * 0.6;
+    master.gain.value = masterGain();
     master.connect(ctx.destination);
   }
   if (ctx.state === 'suspended') ctx.resume().catch(() => {});

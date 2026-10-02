@@ -38,9 +38,12 @@ local EDITABLE = {
 local function editable(c)
     local out = {}
     for _, k in ipairs(EDITABLE) do out[k] = c[k] end
+    -- vector4 stores 32-bit floats (149.05 -> 149.0500030517578); round so values compare
+    -- and display cleanly.
+    local r = function(n) return math.floor(n * 100 + 0.5) / 100 end
     out.banks = {}
     for i, b in ipairs(c.banks) do
-        out.banks[i] = { label = b.label, x = b.coords.x, y = b.coords.y, z = b.coords.z, heading = b.coords.w }
+        out.banks[i] = { label = b.label, x = r(b.coords.x), y = r(b.coords.y), z = r(b.coords.z), heading = r(b.coords.w) }
     end
     return out
 end
@@ -89,10 +92,22 @@ CreateThread(function()
         `id` TINYINT UNSIGNED NOT NULL, `data` LONGTEXT NOT NULL, `updated_at` BIGINT NOT NULL,
         `updated_by` VARCHAR(64) NULL, PRIMARY KEY (`id`))]])
     local raw = MySQL.scalar.await('SELECT data FROM lwk_bank_settings WHERE id = 1')
-    if not raw then return end
-    local values, bad = validate(json.decode(raw) or {})
+    local saved = raw and json.decode(raw)
+    if type(saved) ~= 'table' or next(saved) == nil then return end
+    local values, bad = validate(Logic.merge(editable(Config), saved))
     if not values then
         return print(('^3[lwk_bank] Saved settings ignored, %s is invalid. Using config.lua.^0'):format(bad))
+    end
+    -- Older saves stored the whole config; keep only what actually differs from config.lua.
+    local changes = Logic.diff(values, editable(Config))
+    if not changes then
+        MySQL.query.await('DELETE FROM lwk_bank_settings WHERE id = 1')
+    else
+        MySQL.update.await('UPDATE lwk_bank_settings SET data = ? WHERE id = 1', { json.encode(changes) })
+        local keys = {}
+        for k in pairs(changes) do keys[#keys + 1] = k end
+        table.sort(keys)
+        print(('[lwk_bank] /bankconfig settings override config.lua for: %s'):format(table.concat(keys, ', ')))
     end
     apply(values)
 end)
@@ -101,8 +116,15 @@ lib.callback.register('lwk_bank:adminConfigSave', function(src, values)
     if not Bridge.isAdmin(src) then return { ok = false, error = L('err_no_permission') } end
     local clean, bad = validate(type(values) == 'table' and values or {})
     if not clean then return { ok = false, error = L('err_config_field', bad) } end
-    MySQL.query.await('REPLACE INTO lwk_bank_settings (id, data, updated_at, updated_by) VALUES (1, ?, ?, ?)',
-        { json.encode(clean), Logic.now(), Bridge.identifier(src) })
+    -- Only what differs from config.lua is stored, so later config.lua edits still apply
+    -- to everything the editor never changed.
+    local changes = Logic.diff(clean, editable(Config))
+    if changes then
+        MySQL.query.await('REPLACE INTO lwk_bank_settings (id, data, updated_at, updated_by) VALUES (1, ?, ?, ?)',
+            { json.encode(changes), Logic.now(), Bridge.identifier(src) })
+    else
+        MySQL.query.await('DELETE FROM lwk_bank_settings WHERE id = 1')
+    end
     apply(clean)
     Logs.event(src, 'config', 'Config saved', 'In-game editor')
     return { ok = true, data = payload() }

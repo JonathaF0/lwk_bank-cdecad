@@ -80,3 +80,15 @@ c = cfg(); c.loans.plans[2] = { id = 'starter', name = 'Dup', min = 1, max = 2, 
 c = cfg(); c.loans.terms = { 1.5 }; eq(Logic.checkConfig(c), 'loans.terms[1]')
 c = cfg(); c.sound.volume = 2; eq(Logic.checkConfig(c), 'sound.volume')
 c = cfg(); c.banks[1].label = ' '; eq(Logic.checkConfig(c), 'banks[1]')
+
+-- config editor: only changes are saved ---------------------------------------------
+local base = { sound = { enabled = true, volume = 0.5 }, accent = '#c8f031', terms = { 12, 24 }, banks = { { label = 'A', x = 1 } } }
+eq(Logic.diff(base, base), nil, 'no changes -> nothing saved')
+local d = Logic.diff({ sound = { enabled = true, volume = 0.1 }, accent = '#c8f031', terms = { 12, 24 }, banks = { { label = 'A', x = 1 } } }, base)
+eq(d.sound.volume, 0.1); eq(d.sound.enabled, nil, 'unchanged sibling not saved'); eq(d.accent, nil); eq(d.terms, nil); eq(d.banks, nil)
+d = Logic.diff({ sound = base.sound, accent = '#fff', terms = { 12 }, banks = { { label = 'B', x = 1 } } }, base)
+eq(#d.terms, 1, 'changed list saved whole'); eq(d.banks[1].label, 'B'); eq(d.accent, '#fff')
+local m = Logic.merge(base, { sound = { volume = 0.2 }, terms = { 5 } })
+eq(m.sound.volume, 0.2); eq(m.sound.enabled, true, 'config.lua value kept'); eq(#m.terms, 1); eq(m.terms[1], 5); eq(m.accent, '#c8f031')
+eq(Logic.merge(base, {}).accent, '#c8f031')
+eq(Logic.diff({ x = 149.0500030517578 }, { x = 149.05 }), nil, 'float32 noise is not a change')

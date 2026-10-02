@@ -125,6 +125,48 @@ function Logic.sanitize(value, template, path)
     return nil, path
 end
 
+local function isArray(t) return type(t) == 'table' and (t[1] ~= nil or next(t) == nil) end
+
+local function same(a, b)
+    if type(a) ~= type(b) then return false end
+    -- Positions pass through 32-bit floats (vector4), so 149.05 can come back as 149.0500030517578.
+    if type(a) == 'number' then return math.abs(a - b) < 1e-3 end
+    if type(a) ~= 'table' then return a == b end
+    for k, v in pairs(a) do if not same(v, b[k]) then return false end end
+    for k in pairs(b) do if a[k] == nil then return false end end
+    return true
+end
+
+--- What `value` changes compared to `base`: objects recurse, lists and values count
+--- as a whole. Returns nil when nothing differs. Saved instead of the full config, so
+--- config.lua still controls everything an admin never touched in the editor.
+function Logic.diff(value, base)
+    if type(value) == 'table' and type(base) == 'table' and not isArray(value) and not isArray(base) then
+        local out
+        for k, v in pairs(value) do
+            local d = Logic.diff(v, base[k])
+            if d ~= nil then
+                out = out or {}
+                out[k] = d
+            end
+        end
+        return out
+    end
+    if same(value, base) then return nil end
+    return value
+end
+
+--- `base` with `over` laid on top (the reverse of diff).
+function Logic.merge(base, over)
+    if over == nil then return base end
+    -- An empty {} from JSON over an object means "no changes", not "replace with nothing".
+    if type(base) ~= 'table' or type(over) ~= 'table' or isArray(base) or over[1] ~= nil then return over end
+    local out = {}
+    for k, v in pairs(base) do out[k] = v end
+    for k, v in pairs(over) do out[k] = Logic.merge(base[k], v) end
+    return out
+end
+
 local function nonNegative(t, path, skip)
     for k, v in pairs(t) do
         local key = type(k) == 'number' and ('%s[%d]'):format(path, k) or (path .. '.' .. k)
