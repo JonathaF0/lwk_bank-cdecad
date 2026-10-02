@@ -108,7 +108,8 @@ end
 function Accounts.debit(row, amount, src)
     if row.is_default == 1 then
         local owner = src and Bridge.identifier(src) == row.owner and src or Bridge.sourceOf(row.owner)
-        return owner ~= nil and Bridge.removeMoney(owner, 'bank', amount, 'lwk_bank')
+        if owner then return Bridge.removeMoney(owner, 'bank', amount, 'lwk_bank') end
+        return Bridge.removeBankOffline(row.owner, amount) -- scheduled charges (renewals, loans)
     end
     if row.type == 'business' then return Business.remove(row, amount) end
     return MySQL.update.await('UPDATE lwk_bank_accounts SET balance = balance - ? WHERE id = ? AND balance >= ?',

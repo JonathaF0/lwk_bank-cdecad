@@ -113,6 +113,21 @@ function Bridge.addBankOffline(identifier, amount)
     return false
 end
 
+--- Offline debit, only if the stored balance covers it (atomic in the WHERE clause).
+function Bridge.removeBankOffline(identifier, amount)
+    if fw == 'qb' or fw == 'qbox' then
+        return MySQL.update.await(
+            "UPDATE players SET money = JSON_SET(money, '$.bank', CAST(JSON_EXTRACT(money, '$.bank') AS SIGNED) - ?) WHERE citizenid = ? AND CAST(JSON_EXTRACT(money, '$.bank') AS SIGNED) >= ?",
+            { amount, identifier, amount }) > 0
+    end
+    if fw == 'esx' then
+        return MySQL.update.await(
+            "UPDATE users SET accounts = JSON_SET(accounts, '$.bank', CAST(JSON_EXTRACT(accounts, '$.bank') AS SIGNED) - ?) WHERE identifier = ? AND CAST(JSON_EXTRACT(accounts, '$.bank') AS SIGNED) >= ?",
+            { amount, identifier, amount }) > 0
+    end
+    return false
+end
+
 -- Display name for an identifier that may be offline (for member lists, receipts).
 function Bridge.offlineName(identifier)
     if fw == 'qb' or fw == 'qbox' then

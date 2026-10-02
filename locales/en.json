@@ -49,7 +49,24 @@
     "err_member_self": "You already own this account.",
     "err_member_exists": "They're already a member.",
     "err_member_limit": "This account has too many members.",
-    "err_member_missing": "That member isn't on this account."
+    "err_member_missing": "That member isn't on this account.",
+    "tx_card_fee": "%s card issued",
+    "tx_card_activation": "Card ··%s activated",
+    "tx_card_renewal": "Card ··%s renewed",
+    "card_pin_notice": "Your new card ··%s has PIN %s. Change it any time under Cards.",
+    "card_no_space": "No space for the card - it's still in the bank. Free a slot and re-order to get it.",
+    "err_card_missing": "Card not found.",
+    "err_card_unusable": "This card is frozen or not activated.",
+    "err_card_expired": "This card has expired.",
+    "err_card_not_held": "You need to have this card on you.",
+    "err_card_session": "Insert and verify your card first.",
+    "err_card_tier": "Unknown card type.",
+    "err_card_max": "You can hold %s cards at most.",
+    "err_card_active_max": "Only %s cards can be active at once.",
+    "err_card_limit_range": "Set a limit between 0 and %s.",
+    "err_pin_format": "The PIN must be 4 digits.",
+    "err_pin_wrong": "Incorrect PIN · %s attempts left",
+    "err_pin_frozen": "Too many wrong PINs. The card has been frozen."
   },
   "ui": {}
 }

@@ -19,7 +19,7 @@ end)
 -- A session exists only while the UI is open; ATM sessions allow cash + PIN only.
 
 local sessions, busy = {}, {}
-local ATM_ALLOWED = { deposit = true, withdraw = true, verifyPin = true, atmCards = true }
+local ATM_ALLOWED = { deposit = true, withdraw = true, verifyPin = true }
 
 local function nearBank(src)
     local ped = GetPlayerPed(src)
@@ -140,32 +140,44 @@ end)
 
 -- Cash ---------------------------------------------------------------------------------
 
-Bank.action('deposit', function(src, identifier, p)
+-- At an ATM (decided by the server's session, never the UI) cash only moves through the
+-- card verified by PIN, within its daily limit.
+local function atmGuard(src, session, row, amount, withdrawing)
+    if session.mode ~= 'atm' then return true end
+    if not Cards then return false, L('err_card_session') end
+    return Cards.atmAllows(src, row, amount, withdrawing)
+end
+
+Bank.action('deposit', function(src, identifier, p, session)
     local amount = Logic.amount(p.amount)
     if not amount then return fail(L('err_amount')) end
     local row, err = Accounts.open(src, identifier, p.accountId)
     if not row then return fail(err) end
     if not row.perms.deposit then return fail(L('err_perm_deposit')) end
+    local allowed, why = atmGuard(src, session, row, amount, false)
+    if not allowed then return fail(why) end
     if not Bridge.removeMoney(src, 'cash', amount, 'lwk_bank') then return fail(L('err_cash')) end
     if not Accounts.credit(row, amount) then
         Bridge.addMoney(src, 'cash', amount, 'lwk_bank refund')
         return fail(L('err_generic'))
     end
-    Accounts.log(row.id, 'deposit', amount, L(p.atm and 'tx_atm_deposit' or 'tx_deposit'), Bridge.name(src))
+    Accounts.log(row.id, 'deposit', amount, L(session.mode == 'atm' and 'tx_atm_deposit' or 'tx_deposit'), Bridge.name(src))
     Logs.money(src, 'deposit', amount, row)
     return ok(src)
 end)
 
-Bank.action('withdraw', function(src, identifier, p)
+Bank.action('withdraw', function(src, identifier, p, session)
     local amount = Logic.amount(p.amount)
     if not amount then return fail(L('err_amount')) end
     local row, err = Accounts.open(src, identifier, p.accountId)
     if not row then return fail(err) end
     if not row.perms.withdraw then return fail(L('err_perm_withdraw')) end
-    if p.atm and Cards and not Cards.withdrawAllowed(src, row, amount) then return fail(L('err_card_limit')) end
+    local allowed, why = atmGuard(src, session, row, amount, true)
+    if not allowed then return fail(why) end
     if not Accounts.debit(row, amount, src) then return fail(L('err_funds')) end
     Bridge.addMoney(src, 'cash', amount, 'lwk_bank')
-    Accounts.log(row.id, 'withdraw', amount, L(p.atm and 'tx_atm_withdraw' or 'tx_withdraw'), Bridge.name(src))
+    if session.mode == 'atm' then Cards.recordSpend(src, amount) end
+    Accounts.log(row.id, 'withdraw', amount, L(session.mode == 'atm' and 'tx_atm_withdraw' or 'tx_withdraw'), Bridge.name(src))
     Logs.money(src, 'withdraw', amount, row)
     return ok(src)
 end)

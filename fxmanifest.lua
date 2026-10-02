@@ -26,12 +26,14 @@ server_scripts {
   '@oxmysql/lib/MySQL.lua',
   'server/settings.lua',
   'bridge/framework.lua',
+  'bridge/inventory.lua',
   'server/logic.lua',
   'server/logs.lua',
   'server/business.lua',
   'server/accounts.lua',
   'server/main.lua',
   'server/manage.lua',
+  'server/cards.lua',
 }
 
 client_scripts {
