@@ -82,7 +82,7 @@ local function apply(e)
         if not row then return false end
         if e.label then MySQL.update.await('UPDATE lwk_bank_accounts SET name = ? WHERE id = ?', { e.label, row.id }) end
         if balance > 0 then
-            Accounts.credit(row, balance)
+            if not Accounts.credit(row, balance) then return false end
             Accounts.log(row.id, 'deposit', balance, L('import_tx'))
         end
         return true
@@ -103,10 +103,16 @@ local function reply(src, lines)
     if src == 0 then print(text) else TriggerClientEvent('lwk_bank:adminInfo', src, text) end
 end
 
+-- Every DB call yields, so two imports started together could both pass the "already
+-- imported" check and credit everything twice. One import at a time.
+local running = false
+
 CreateThread(function()
     MySQL.query.await([[CREATE TABLE IF NOT EXISTS `lwk_bank_imports` (
         `source` VARCHAR(32) NOT NULL, `imported_at` BIGINT NOT NULL, `summary` VARCHAR(255) NOT NULL, PRIMARY KEY (`source`))]])
 end)
+
+local run -- the import itself, below the command
 
 lib.addCommand('bankimport', {
     help = L('cmd_import_help'),
@@ -123,11 +129,20 @@ lib.addCommand('bankimport', {
     local skip = {}
     for t in (opts:match('skip=(%S+)') or ''):gmatch('[^,]+') do skip[t] = true end
 
-    local done = MySQL.single.await('SELECT * FROM lwk_bank_imports WHERE source = ?', { name })
-    if done and not force then return reply(src, { L('import_already', name, done.summary) }) end
+    if running then return reply(src, { L('import_busy') }) end
+    running = true
+    local okRun, err = pcall(function()
+        local done = MySQL.single.await('SELECT * FROM lwk_bank_imports WHERE source = ?', { name })
+        if done and not force then return reply(src, { L('import_already', name, done.summary) }) end
+        local rows = read()
+        if not rows then return reply(src, { L('import_no_tables', name) }) end
+        run(src, name, rows, skip, confirm)
+    end)
+    running = false
+    if not okRun then print(('^1[lwk_bank] bankimport failed: %s^0'):format(err)) end
+end)
 
-    local rows = read()
-    if not rows then return reply(src, { L('import_no_tables', name) }) end
+function run(src, name, rows, skip, confirm)
 
     -- Summary by type, so double counting (e.g. a type that is really the main account) is visible.
     local byType, order, total, count = {}, {}, 0, 0
@@ -166,4 +181,4 @@ lib.addCommand('bankimport', {
     lines[#lines + 1] = L('import_result', ok, empty, failed)
     reply(src, lines)
     Logs.event(src ~= 0 and src or nil, 'admin', 'Bank import', ('%s: %s'):format(name, summary))
-end)
+end
