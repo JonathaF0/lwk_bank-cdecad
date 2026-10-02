@@ -109,7 +109,7 @@ function Accounts.open(src, identifier, accountId)
 end
 
 function Accounts.balance(row, src)
-    if row.is_default == 1 then
+    if Logic.flag(row.is_default) then
         local owner = src and Bridge.identifier(src) == row.owner and src or Bridge.sourceOf(row.owner)
         return owner and Bridge.getMoney(owner, 'bank') or 0
     end
@@ -125,7 +125,7 @@ end
 
 --- Take money out of an account's checking balance. Atomic: never overdraws.
 function Accounts.debit(row, amount, src)
-    if row.is_default == 1 then
+    if Logic.flag(row.is_default) then
         local owner = src and Bridge.identifier(src) == row.owner and src or Bridge.sourceOf(row.owner)
         if owner then return Bridge.removeMoney(owner, 'bank', amount, 'lwk_bank') end
         return Bridge.removeBankOffline(row.owner, amount) -- scheduled charges (renewals, loans)
@@ -137,7 +137,7 @@ end
 
 --- Put money into an account's checking balance (owner may be offline).
 function Accounts.credit(row, amount)
-    if row.is_default == 1 then
+    if Logic.flag(row.is_default) then
         local owner = Bridge.sourceOf(row.owner)
         if owner then return Bridge.addMoney(owner, 'bank', amount, 'lwk_bank') end
         return Bridge.addBankOffline(row.owner, amount)

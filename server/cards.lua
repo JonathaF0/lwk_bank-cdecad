@@ -52,7 +52,7 @@ function Cards.forPlayer(src, identifier)
             out[#out + 1] = {
                 id = tostring(c.id), accountId = tostring(c.account_id), tier = c.tier, last4 = c.last4,
                 holder = c.holder, expiresAt = c.expires_at, status = c.status, dailyLimit = c.daily_limit,
-                spentToday = c.spent_day == today() and c.spent_today or 0, autoRenew = c.auto_renew == 1,
+                spentToday = c.spent_day == today() and c.spent_today or 0, autoRenew = Logic.flag(c.auto_renew),
             }
         end
     end

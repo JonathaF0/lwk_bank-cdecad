@@ -67,7 +67,7 @@ end)
 Bank.action('accountDelete', function(src, identifier, p)
     local row, err = ownerOnly(src, identifier, p.accountId)
     if not row then return fail(err) end
-    if row.is_default == 1 then return fail(L('err_delete_default')) end
+    if Logic.flag(row.is_default) then return fail(L('err_delete_default')) end
     if row.type == 'business' then return fail(L('err_delete_business')) end
     local held = row.balance + row.savings + (Savings and Savings.goalTotal(row.id) or 0)
     if held > 0 then return fail(L('err_delete_not_empty')) end

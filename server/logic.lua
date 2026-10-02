@@ -7,6 +7,11 @@ function Logic.now()
 end
 
 --- Whole, positive, sane amount or nil.
+--- A yes/no column. oxmysql returns TINYINT(1) as true/false, other drivers as 1/0.
+function Logic.flag(v)
+    return v == true or v == 1
+end
+
 function Logic.amount(v, max)
     v = tonumber(v)
     if not v or v ~= v or v <= 0 or v % 1 ~= 0 or v > (max or 1e12) then return nil end

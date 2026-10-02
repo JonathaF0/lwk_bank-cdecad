@@ -29,7 +29,7 @@ lib.addCommand('bankadmin', {
     local lines = { ('**%s** · `%s`'):format(Bridge.offlineName(identifier), identifier),
         L('admin_score', Loans and Loans.score(identifier) or '-'), '' }
     for _, a in ipairs(MySQL.query.await('SELECT * FROM lwk_bank_accounts WHERE owner = ? ORDER BY is_default DESC', { identifier })) do
-        local balance = a.is_default == 1 and L('admin_framework_bank') or ('$' .. a.balance)
+        local balance = Logic.flag(a.is_default) and L('admin_framework_bank') or ('$' .. a.balance)
         lines[#lines + 1] = ('- %s (%s) · `%s` · %s · %s $%s'):format(a.name, a.type, a.iban, balance, L('admin_savings'), a.savings)
     end
     for _, c in ipairs(MySQL.query.await('SELECT tier, last4, status FROM lwk_bank_cards WHERE owner = ?', { identifier })) do

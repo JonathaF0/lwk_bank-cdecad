@@ -66,7 +66,7 @@ end
 --- Pays a jg-dealerships finance bill. jg takes the payment from the player's bank money
 --- itself, so money from any other LWK account is moved there first (and back on failure).
 function Billing.payFinance(src, row, bill)
-    local moved = row.is_default ~= 1
+    local moved = not Logic.flag(row.is_default)
     if moved then
         if not Accounts.debit(row, bill.amount, src) then return false end
         -- If the money can't reach the bank, stop: jg would charge whatever is already there.

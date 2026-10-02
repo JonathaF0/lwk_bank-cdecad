@@ -204,7 +204,7 @@ end)
 -- Transfers -------------------------------------------------------------------------------
 
 local function displayName(row)
-    if row.is_default == 1 then return Bridge.offlineName(row.owner) end
+    if Logic.flag(row.is_default) then return Bridge.offlineName(row.owner) end
     return row.name
 end
 
@@ -234,12 +234,12 @@ Bank.action('transfer', function(src, identifier, p)
     if not Accounts.debit(from, total, src) then return fail(L('err_funds')) end
 
     local note = Logic.text(p.note, 1, 40)
-    local sender = from.is_default == 1 and Bridge.name(src) or from.name
+    local sender = Logic.flag(from.is_default) and Bridge.name(src) or from.name
     for _, to in ipairs(targets) do
         if Accounts.credit(to, amount) then
             Accounts.log(from.id, 'transfer_out', amount, note or L('tx_transfer_out'), displayName(to))
             Accounts.log(to.id, 'transfer_in', amount, note or L('tx_transfer_in'), sender)
-            local recipient = to.is_default == 1 and Bridge.sourceOf(to.owner)
+            local recipient = Logic.flag(to.is_default) and Bridge.sourceOf(to.owner)
             if recipient and recipient ~= src then
                 TriggerClientEvent('lwk_bank:incoming', recipient, amount, sender)
                 Bank.refresh(recipient)
