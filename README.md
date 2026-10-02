@@ -2,6 +2,8 @@
 
 A free, open-source bank for FiveM by **LWK Development**. Animated 3D UI, real ATMs and bank cards, savings goals, loans with credit scores, bills, shared and business accounts, and an in-game settings editor, so you never have to touch a config file.
 
+![Overview](.github/showcase.png)
+
 Works with **Qbox, QBCore and ESX** (detected automatically).
 
 ## Features
