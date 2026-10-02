@@ -66,7 +66,16 @@
     "err_card_limit_range": "Set a limit between 0 and %s.",
     "err_pin_format": "The PIN must be 4 digits.",
     "err_pin_wrong": "Incorrect PIN · %s attempts left",
-    "err_pin_frozen": "Too many wrong PINs. The card has been frozen."
+    "err_pin_frozen": "Too many wrong PINs. The card has been frozen.",
+    "tx_to_savings": "Moved to savings",
+    "tx_from_savings": "Moved from savings",
+    "tx_to_goal": "Saved to %s",
+    "tx_from_goal": "Taken from %s",
+    "tx_interest": "Weekly interest",
+    "err_savings_funds": "Not enough in savings.",
+    "err_goal_limit": "An account can have %s goals at most.",
+    "err_goal_missing": "Goal not found.",
+    "err_goal_funds": "The goal holds less than that."
   },
   "ui": {}
 }
