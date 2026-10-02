@@ -32,6 +32,23 @@ for (const f of files) {
 }
 console.log(`syntax: ${files.length - failed}/${files.length} Lua files ok`);
 
+// 1b. Every L('key') used in Lua exists in locales/en.json --------------------------
+const en = JSON.parse(readFileSync(join(ROOT, 'locales', 'en.json'), 'utf8'));
+const missing = new Set();
+for (const f of files) {
+  for (const m of readFileSync(f, 'utf8').matchAll(/\bL\(\s*'([a-z0-9_]+)'/g)) {
+    if (!(m[1] in en.server)) missing.add(`${m[1]} (${relative(ROOT, f)})`);
+  }
+  // L(cond and 'a' or 'b') style: check both literals
+  for (const m of readFileSync(f, 'utf8').matchAll(/\bL\([^)]*?and '([a-z0-9_]+)' or '([a-z0-9_]+)'/g)) {
+    for (const k of [m[1], m[2]]) if (!(k in en.server)) missing.add(`${k} (${relative(ROOT, f)})`);
+  }
+}
+if (missing.size) {
+  failed++;
+  console.error('locale keys missing from en.json:\n  ' + [...missing].join('\n  '));
+} else console.log('locale: every L() key exists in en.json');
+
 // 2. Specs ------------------------------------------------------------------------
 const { lua, lauxlib, lualib, to_luastring } = fengari;
 const specs = readdirSync(join(ROOT, 'tests')).filter((f) => f.endsWith('_spec.lua'));

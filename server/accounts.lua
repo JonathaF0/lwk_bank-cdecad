@@ -49,7 +49,6 @@ function Accounts.accessOf(src, identifier, row, memberPerms)
             if job.isBoss then return 'owner', ALL end
             return 'member', Cfg().business.employeePerms
         end
-        return nil
     end
     if memberPerms then return 'member', decodePerms(memberPerms) end
     return nil
@@ -81,7 +80,7 @@ end
 function Accounts.open(src, identifier, accountId)
     local row = Accounts.byId(accountId)
     if not row then return nil, L('err_account_missing') end
-    local perms = row.owner ~= identifier and row.type ~= 'business'
+    local perms = row.owner ~= identifier
         and MySQL.scalar.await('SELECT perms FROM lwk_bank_members WHERE account_id = ? AND identifier = ?', { row.id, identifier })
         or nil
     local role, p = Accounts.accessOf(src, identifier, row, perms)

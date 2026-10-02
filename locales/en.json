@@ -31,7 +31,25 @@
     "err_same_account": "You can't send money to the same account.",
     "err_contact_exists": "That IBAN is already saved.",
     "err_contact_limit": "You've reached the contact limit.",
-    "err_card_limit": "That's over this card's daily limit."
+    "err_card_limit": "That's over this card's daily limit.",
+    "business_bosses": "%s bosses",
+    "member_added": "You were added to the account %s.",
+    "tx_iban_fee": "Custom IBAN",
+    "err_owner_only": "Only the account owner can do that.",
+    "err_max_accounts": "You can own %s accounts at most.",
+    "err_fee_cash": "Opening an account costs $%s cash.",
+    "err_fee_account": "This costs $%s and the account can't cover it.",
+    "err_delete_default": "Your main account can't be closed.",
+    "err_delete_business": "Business accounts belong to the job and can't be closed.",
+    "err_delete_not_empty": "Empty the account (including savings and goals) before closing it.",
+    "err_iban_format": "Use 4-12 letters or numbers.",
+    "err_iban_taken": "That IBAN is taken.",
+    "err_personal_members": "Personal accounts can't have members.",
+    "err_player_offline": "No player with that server ID is online.",
+    "err_member_self": "You already own this account.",
+    "err_member_exists": "They're already a member.",
+    "err_member_limit": "This account has too many members.",
+    "err_member_missing": "That member isn't on this account."
   },
   "ui": {}
 }

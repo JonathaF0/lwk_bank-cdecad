@@ -34,6 +34,39 @@ function Business.add(row, amount)
     return MySQL.update.await('UPDATE lwk_bank_accounts SET balance = balance + ? WHERE id = ?', { amount, row.id }) > 0
 end
 
+-- Exports for job scripts (boss menus, billing, shops):
+--   exports.lwk_bank:AddBusinessMoney('police', 500, 'Fine paid')       -> boolean
+--   exports.lwk_bank:RemoveBusinessMoney('police', 500, 'Equipment')    -> boolean
+--   exports.lwk_bank:GetBusinessBalance('police')                       -> number
+local function jobAccount(job)
+    if type(job) ~= 'string' or job == '' then return nil end
+    local row = Business.byJob(job)
+    if not row then
+        Business.ensure({ name = job, label = job })
+        row = Business.byJob(job)
+    end
+    return row
+end
+
+exports('AddBusinessMoney', function(job, amount, reason)
+    local row, amt = jobAccount(job), Logic.amount(amount)
+    if not row or not amt or not Business.add(row, amt) then return false end
+    Accounts.log(row.id, 'deposit', amt, Logic.text(reason, 1, 64) or L('tx_deposit'))
+    return true
+end)
+
+exports('RemoveBusinessMoney', function(job, amount, reason)
+    local row, amt = jobAccount(job), Logic.amount(amount)
+    if not row or not amt or not Business.remove(row, amt) then return false end
+    Accounts.log(row.id, 'withdraw', amt, Logic.text(reason, 1, 64) or L('tx_withdraw'))
+    return true
+end)
+
+exports('GetBusinessBalance', function(job)
+    local row = jobAccount(job)
+    return row and Business.balance(row) or 0
+end)
+
 function Business.remove(row, amount)
     local a = addonAccount(row.owner)
     if a then

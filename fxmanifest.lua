@@ -31,6 +31,7 @@ server_scripts {
   'server/business.lua',
   'server/accounts.lua',
   'server/main.lua',
+  'server/manage.lua',
 }
 
 client_scripts {
