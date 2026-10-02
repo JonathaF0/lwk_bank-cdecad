@@ -23,6 +23,7 @@ export function App() {
 
   useNuiMessage((msg) => {
     if (msg.action === 'close') return close();
+    if (!('data' in msg)) return;
     setData(normalize(msg.data));
     if (msg.action === 'open' || msg.action === 'openAtm') {
       const next = msg.action === 'open' ? 'bank' : 'atm';

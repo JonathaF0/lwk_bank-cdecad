@@ -1,0 +1,1 @@
+{"name":"lwk-bank-tests","private":true,"type":"module","scripts":{"test":"node run.mjs"},"devDependencies":{"fengari":"^0.1.5","luaparse":"^0.3.1"}}

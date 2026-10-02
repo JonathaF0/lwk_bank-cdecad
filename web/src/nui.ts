@@ -237,7 +237,8 @@ export type Result = { ok: true; data: BankData } | { ok: false; error: string }
 
 export type NuiMessage =
   | { action: 'open' | 'openAtm' | 'update'; data: BankData }
-  | { action: 'close' };
+  | { action: 'close' }
+  | { action: 'incoming'; amount: number; from: string };
 
 /** Used for anything the server's config leaves out. Mirrors config.lua. */
 export const DEFAULT_CONFIG: BankConfig = {

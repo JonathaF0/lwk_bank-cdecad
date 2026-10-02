@@ -1,0 +1,37 @@
+{
+  "meta": { "name": "English", "intl": "en-US" },
+  "server": {
+    "default_account_name": "Everyday",
+    "incoming": "You received $%s from %s",
+
+    "tx_deposit": "Cash deposit",
+    "tx_withdraw": "Cash withdrawal",
+    "tx_atm_deposit": "ATM deposit",
+    "tx_atm_withdraw": "ATM withdrawal",
+    "tx_transfer_out": "Transfer sent",
+    "tx_transfer_in": "Transfer received",
+
+    "err_generic": "Something went wrong. Try again.",
+    "err_session": "Open the bank first.",
+    "err_not_here": "You need to be at a bank or ATM.",
+    "err_atm_only": "That's only available at a bank branch.",
+    "err_busy": "Still processing your last request.",
+    "err_disabled": "That feature is turned off on this server.",
+    "err_amount": "Enter an amount above zero.",
+    "err_name": "Enter a name.",
+    "err_cash": "You don't have that much cash on you.",
+    "err_funds": "Insufficient funds.",
+    "err_account_missing": "Account not found.",
+    "err_no_access": "You don't have access to that account.",
+    "err_perm_deposit": "You don't have deposit access on this account.",
+    "err_perm_withdraw": "You don't have withdraw access on this account.",
+    "err_perm_transfer": "You don't have transfer access on this account.",
+    "err_recipients": "Pick at least one recipient.",
+    "err_iban": "No account found for %s.",
+    "err_same_account": "You can't send money to the same account.",
+    "err_contact_exists": "That IBAN is already saved.",
+    "err_contact_limit": "You've reached the contact limit.",
+    "err_card_limit": "That's over this card's daily limit."
+  },
+  "ui": {}
+}
