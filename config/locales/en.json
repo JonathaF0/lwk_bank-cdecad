@@ -130,7 +130,9 @@
     "import_doing": "Importing from %s:",
     "import_total": "Total: %s accounts, $%s",
     "import_how": "Run '/bankimport %s confirm' to import. Leave out a type with skip=type1,type2.",
-    "import_result": "Done: %s imported, %s empty society accounts skipped, %s failed (see server console)."
+    "import_result": "Done: %s imported, %s empty society accounts skipped, %s failed (see server console).",
+    "import_busy": "An import is already running. Try again when it finishes.",
+    "err_bill_partial": "Not every bill could be paid. The ones left are still in Bills."
   },
   "ui": {
     "section_overview": "Overview",

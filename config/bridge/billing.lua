@@ -69,14 +69,18 @@ function Billing.payFinance(src, row, bill)
     local moved = row.is_default ~= 1
     if moved then
         if not Accounts.debit(row, bill.amount, src) then return false end
-        Bridge.addMoney(src, 'bank', bill.amount, 'lwk_bank finance')
+        -- If the money can't reach the bank, stop: jg would charge whatever is already there.
+        if not Bridge.addMoney(src, 'bank', bill.amount, 'lwk_bank finance') then
+            Accounts.credit(row, bill.amount)
+            return false
+        end
     elseif Bridge.getMoney(src, 'bank') < bill.amount then
         return false
     end
     local ok, paid = pcall(function() return exports['jg-dealerships']:makeFinancePayment(src, bill.payTo.jg) end)
     if ok and paid then return true end
-    if moved then
-        Bridge.removeMoney(src, 'bank', bill.amount, 'lwk_bank finance')
+    -- Only give it back if it's still in the bank (jg may have charged before erroring).
+    if moved and Bridge.removeMoney(src, 'bank', bill.amount, 'lwk_bank finance') then
         Accounts.credit(row, bill.amount)
     end
     return false

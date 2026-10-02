@@ -69,7 +69,11 @@ Bank.action('billPayAll', function(src, identifier, p)
     if #due == 0 then return fail(L('err_bill_none')) end
     if Accounts.balance(row, src) < total then return fail(L('err_funds')) end
     for _, bill in ipairs(due) do
-        if not payOne(src, identifier, row, bill) then break end
+        if not payOne(src, identifier, row, bill) then
+            -- Some were paid, so still refresh the UI, but say the rest weren't.
+            Bridge.notify(src, L('err_bill_partial'), 'error')
+            break
+        end
     end
     return ok(src)
 end)
