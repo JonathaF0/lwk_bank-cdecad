@@ -90,6 +90,12 @@ You have two options:
   - `admin` (who counts as staff)
   - `interestDay` (needs a restart)
 
+Only the settings you actually change in `/bankconfig` are saved, so anything you never touched there still follows `config.lua`. The server console lists which settings are overridden on start.
+
+### ATMs that don't respond
+
+Most ATMs are props, found by model (`atmModels`). A few are built into a building's walls (for example, outside the Legion Square Fleeca) and can't be found that way. List those in `atmSpots`, or stand at one and use `/bankconfig` → World → **Add ATM here**.
+
 ### Language
 
 Set `locale` (in `/bankconfig` → General, or `config.lua`) to the name of a file in `locales/`. To add a language:

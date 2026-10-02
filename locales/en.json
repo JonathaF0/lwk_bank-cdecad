@@ -411,7 +411,6 @@
     "cfg_failed": "Couldn't reach the server",
     "cfg_list_hint": "Separate with commas",
     "cfg_add_row": "Add row",
-    "cfg_add_here": "Add bank here",
     "cfg_new_bank": "New bank",
     "cfg_section_general": "General",
     "cfg_section_features": "Features",
@@ -474,6 +473,10 @@
     "cfg_shared": "Shared accounts",
     "cfg_business": "Business accounts",
     "cfg_hint_section_savings": "Weekly interest % paid on savings, by account type.",
-    "cfg_hint_section_world": "Where the bank can be used. Changes apply to every player straight away."
+    "cfg_hint_section_world": "Where the bank can be used. Changes apply to every player straight away.",
+    "cfg_add_here_banks": "Add bank here",
+    "cfg_add_here_atmSpots": "Add ATM here",
+    "cfg_atmSpots": "ATM spots",
+    "cfg_hint_atmSpots": "ATMs built into a building (not a prop) can't be found by model. Stand at one and press Add ATM here"
   }
 }

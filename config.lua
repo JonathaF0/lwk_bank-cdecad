@@ -102,6 +102,12 @@ Config = {
     },
     blips = { enabled = true, sprite = 108, color = 2, scale = 0.7 },
     atmModels = { 'prop_atm_01', 'prop_atm_02', 'prop_atm_03', 'prop_fleeca_atm' },
+    -- ATMs built into a building instead of placed as a prop can't be found by model.
+    -- List their positions here (or stand at one in /bankconfig > World > Add ATM here).
+    atmSpots = {
+        { x = 147.47, y = -1036.22, z = 29.37 },   -- Legion Square Fleeca, outside wall
+        { x = 145.84, y = -1035.63, z = 29.37 },
+    },
     banks = {
         { label = 'Legion Square',  coords = vec4(149.05, -1041.3, 29.37, 340.0) },
         { label = 'Hawick Avenue',  coords = vec4(313.32, -280.03, 54.17, 340.0) },

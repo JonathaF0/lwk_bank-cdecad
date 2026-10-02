@@ -19,7 +19,7 @@ const SECTIONS: [string, string[]][] = [
   ['savings', ['savingsRates']],
   ['loans', ['loans']],
   ['accounts', ['accounts', 'business', 'receipts']],
-  ['world', ['interaction', 'blips', 'atmModels', 'banks']],
+  ['world', ['interaction', 'blips', 'atmModels', 'atmSpots', 'banks']],
   ['logs', ['logs']],
 ];
 
@@ -244,7 +244,11 @@ function RowTable({ ctx, name, path, rows, row }: { ctx: FieldCtx; name: string;
   const add = (r: Obj) => update(path, [...rows, r]);
   const here = async () => {
     const pos = await fetchNui<Obj>('adminHere').catch(() => null);
-    if (pos) add({ ...clone(row), label: t('cfg_new_bank'), ...pos });
+    if (!pos) return;
+    const next: Obj = { ...clone(row) };
+    for (const k of Object.keys(next)) if (k in pos) next[k] = pos[k];
+    if ('label' in next) next.label = t('cfg_new_bank');
+    add(next);
   };
   return (
     <fieldset className="cfg-group cfg-wide">
@@ -282,9 +286,9 @@ function RowTable({ ctx, name, path, rows, row }: { ctx: FieldCtx; name: string;
         <button className="btn btn-ghost btn-sm" onClick={() => add(clone(rows[rows.length - 1] ?? row))}>
           <Icon name="plus" size={1} /> {t('cfg_add_row')}
         </button>
-        {name === 'banks' && (
+        {(name === 'banks' || name === 'atmSpots') && (
           <button className="btn btn-ghost btn-sm" onClick={here}>
-            <Icon name="bank" size={1} /> {t('cfg_add_here')}
+            <Icon name={name === 'banks' ? 'bank' : 'card'} size={1} /> {t('cfg_add_here_' + name)}
           </button>
         )}
       </div>

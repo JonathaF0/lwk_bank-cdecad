@@ -15,10 +15,13 @@ local promptOpen, atmPrompt = false, false
 
 -- Opening: face the machine/counter, short animation + progress, then the UI. ----------
 
-local function openAt(mode, entity)
+local function openAt(mode, entity, pos)
     local ped = cache.ped
     if entity and entity ~= 0 then
         TaskTurnPedToFaceEntity(ped, entity, 600)
+        Wait(500)
+    elseif pos then
+        TaskTurnPedToFaceCoord(ped, pos.x, pos.y, pos.z, 600)
         Wait(500)
     end
     if world.interaction.openAnim then
@@ -99,6 +102,30 @@ local function build()
             AddTextComponentSubstringPlayerName(world.bankName)
             EndTextCommandSetBlipName(blip)
             blips[#blips + 1] = blip
+        end
+    end
+
+    -- ATMs that are part of a building, not a prop: a small zone at each listed spot.
+    for i, spot in ipairs(world.atmSpots or {}) do
+        local pos = vec3(spot.x, spot.y, spot.z)
+        if target == 'ox' then
+            local opt = option('atm')
+            opt.onSelect = function() openAt('atm', nil, pos) end
+            zones[#zones + 1] = exports.ox_target:addSphereZone({ coords = pos, radius = 0.75, options = { opt } })
+        elseif target == 'qb' then
+            local name = 'lwk_bank_atm_' .. i
+            local opt = option('atm')
+            opt.action = function() openAt('atm', nil, pos) end
+            exports['qb-target']:AddCircleZone(name, pos, 0.75, { name = name, useZ = true },
+                { options = { opt }, distance = world.interaction.distance })
+            zones[#zones + 1] = name
+        else
+            zones[#zones + 1] = lib.points.new({
+                coords = pos, distance = world.interaction.distance,
+                onEnter = function() lib.showTextUI(L('prompt_atm')) promptOpen = true end,
+                onExit = function() lib.hideTextUI() promptOpen = false end,
+                nearby = function() if IsControlJustReleased(0, 38) then openAt('atm', nil, pos) end end,
+            })
         end
     end
 

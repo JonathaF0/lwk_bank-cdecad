@@ -21,8 +21,8 @@ end
 local function publishWorld()
     local c = Cfg()
     GlobalState.lwk_bank_world = {
-        bankName = c.bankName, locale = c.locale, banks = c.banks, atmModels = c.atmModels, blips = c.blips,
-        interaction = c.interaction,
+        bankName = c.bankName, locale = c.locale, currency = c.currency, accent = c.accent, banks = c.banks,
+        atmModels = c.atmModels, atmSpots = c.atmSpots, blips = c.blips, interaction = c.interaction,
     }
 end
 
@@ -31,7 +31,7 @@ end
 -- (a typo there could lock staff out) and interestDay (its cron is set at start).
 local EDITABLE = {
     'locale', 'bankName', 'accent', 'currency', 'features', 'sound', 'cards', 'savingsRates', 'loans',
-    'accounts', 'business', 'receipts', 'interaction', 'blips', 'atmModels', 'banks', 'logs',
+    'accounts', 'business', 'receipts', 'interaction', 'blips', 'atmModels', 'atmSpots', 'banks', 'logs',
 }
 
 --- The editable part of a config, in editor form (banks as plain numbers, not vector4).
@@ -48,9 +48,13 @@ local function editable(c)
     return out
 end
 
--- Template for sanitize: the defaults, plus a row shape so an empty bank list still validates.
+-- Template for sanitize: the defaults, plus row shapes so empty lists still validate.
+local ROWS = {
+    banks = { { label = '', x = 0.0, y = 0.0, z = 0.0, heading = 0.0 } },
+    atmSpots = { { x = 0.0, y = 0.0, z = 0.0 } },
+}
 local TEMPLATE = editable(Config)
-TEMPLATE.banks = { { label = '', x = 0.0, y = 0.0, z = 0.0, heading = 0.0 } }
+for k, row in pairs(ROWS) do TEMPLATE[k] = row end
 
 --- Validates editor values. Returns the clean values, or nil + the bad field's path.
 local function validate(values)
@@ -82,8 +86,10 @@ end
 
 local function payload()
     local defaults = editable(Config)
-    -- The editor needs a row shape to offer "Add bank" even when config.lua lists none.
-    if #defaults.banks == 0 then defaults.banks = TEMPLATE.banks end
+    -- The editor needs a row shape to offer "Add ... here" even when config.lua lists none.
+    for k, row in pairs(ROWS) do
+        if #defaults[k] == 0 then defaults[k] = row end
+    end
     return { values = editable(current), defaults = defaults, ui = Locale.ui(), accent = current.accent }
 end
 

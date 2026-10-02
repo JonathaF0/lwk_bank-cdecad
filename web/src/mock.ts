@@ -151,6 +151,10 @@ const ADMIN_DEFAULTS = {
   interaction: { distance: 2, openAnim: true, openTime: 1500 },
   blips: { enabled: true, sprite: 108, color: 2, scale: 0.7 },
   atmModels: ['prop_atm_01', 'prop_atm_02', 'prop_atm_03', 'prop_fleeca_atm'],
+  atmSpots: [
+    { x: 147.47, y: -1036.22, z: 29.37 },
+    { x: 145.84, y: -1035.63, z: 29.37 },
+  ],
   banks: [
     { label: 'Legion Square', x: 149.05, y: -1041.3, z: 29.37, heading: 340 },
     { label: 'Hawick Avenue', x: 313.32, y: -280.03, z: 54.17, heading: 340 },
