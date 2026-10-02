@@ -1,0 +1,438 @@
+.atm {
+  position: fixed;
+  inset: 0;
+  perspective: 120rem;
+}
+
+.atm-shell {
+  position: absolute;
+  left: 50%;
+  top: 51%;
+  width: 76rem;
+  height: 44rem;
+  margin: -22rem 0 0 -38rem;
+  padding: 2.5rem;
+  border-radius: var(--r-panel);
+  background: var(--bg-panel);
+  box-shadow: inset 0 0 0 1px var(--line), 0 2rem 6rem rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.atm-shell > * {
+  height: 100%;
+}
+
+.atm-title {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 500;
+  font-stretch: 110%;
+  letter-spacing: -0.025em;
+}
+
+.atm-empty {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.atm-empty h2 {
+  margin: 0;
+  color: var(--text);
+}
+
+/* ---------- card step ---------- */
+
+.atm-card {
+  display: grid;
+  grid-template-columns: 1fr 26rem;
+  gap: 3rem;
+}
+
+.atm-stage {
+  position: relative;
+  border-radius: var(--r-ctl);
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 42%, var(--accent-dim), transparent 70%),
+    var(--bg-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.card3d {
+  position: absolute;
+  inset: 0;
+}
+
+/* At the ATM the card disappears below the slot line when inserted. */
+.atm-stage .card3d {
+  -webkit-mask-image: linear-gradient(#000 78%, transparent 78%);
+  mask-image: linear-gradient(#000 78%, transparent 78%);
+}
+
+.card3d canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.slot-line {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 78%;
+  height: 0.375rem;
+  margin-top: -0.1875rem;
+  border-radius: 999px;
+  background: #000;
+  box-shadow: 0 1px 0 var(--line-strong);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.slot-line.is-hot {
+  background: var(--accent);
+  box-shadow: 0 0 1.5rem var(--accent);
+}
+
+.atm-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1.5rem;
+  text-align: center;
+  font-size: 0.625rem;
+}
+
+.atm-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.card-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: var(--r-ctl);
+  text-align: left;
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: box-shadow 0.2s, background-color 0.2s;
+}
+
+.card-row:hover:not(:disabled) {
+  background: var(--bg-raised);
+}
+
+.card-row[aria-pressed='true'] {
+  background: var(--bg-raised);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.card-row-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.card-row-main .mono {
+  font-size: 0.625rem;
+}
+
+.card-swatch {
+  width: 2.75rem;
+  height: 1.75rem;
+  border-radius: 0.25rem;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.tier-standard {
+  background: linear-gradient(135deg, #30342f, #121412);
+}
+
+.tier-premium {
+  background: linear-gradient(135deg, #23401c, #081206);
+}
+
+.tier-gold {
+  background: linear-gradient(135deg, #e2c06a, #8c6a22);
+  color: #1d1607;
+}
+
+.badge-blocked {
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  color: var(--neg);
+  box-shadow: inset 0 0 0 1px var(--neg);
+}
+
+.atm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
+.card-flat {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 24rem;
+  height: 15rem;
+  margin: -7.5rem 0 0 -12rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* ---------- PIN ---------- */
+
+.atm-pin {
+  display: grid;
+  grid-template-columns: 1fr 22rem;
+  align-items: center;
+  gap: 4rem;
+  padding: 0 3rem;
+}
+
+.pin-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.pin-dots {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0 0;
+}
+
+.pin-dots span {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--line-strong);
+  transition: background-color 0.2s, box-shadow 0.2s, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pin-dots .is-on {
+  background: var(--accent);
+  box-shadow: 0 0 0 0.375rem var(--accent-dim);
+  transform: scale(1.1);
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.key {
+  height: 4.5rem;
+  border-radius: var(--r-ctl);
+  background: var(--bg-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 1.75rem;
+  font-weight: 500;
+  transition: background-color 0.15s, color 0.15s, transform 0.15s, box-shadow 0.2s;
+}
+
+.key:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.key:active:not(:disabled) {
+  transform: scale(0.95);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.key-fn {
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+/* ---------- menu ---------- */
+
+/* Not positioned: the dispense overlay anchors to .atm-shell and covers it edge to edge. */
+.atm-menu {
+  display: grid;
+  grid-template-columns: 1fr 30rem;
+  gap: 3rem;
+}
+
+.atm-bal {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.atm-done {
+  align-self: flex-start;
+  margin-top: 2rem;
+}
+
+.atm-ops {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.seg {
+  display: flex;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.seg button {
+  flex: 1;
+  height: 2.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.seg [aria-selected='true'] {
+  background: var(--text);
+  color: var(--bg-panel);
+}
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.quick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  height: 4.5rem;
+  border-radius: var(--r-ctl);
+  background: var(--bg-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-stretch: 108%;
+  transition: background-color 0.2s, color 0.2s, transform 0.3s var(--ease-out);
+}
+
+.quick:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-ink);
+  transform: translateY(-0.125rem);
+}
+
+.quick:disabled {
+  opacity: 0.35;
+}
+
+.quick .mono {
+  font-size: 0.625rem;
+}
+
+.quick-max .num {
+  font-size: 0.9375rem;
+}
+
+.other {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.other-prefix {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.other .input {
+  padding-left: 2rem;
+}
+
+/* ---------- cash dispense ---------- */
+
+.dispense {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: var(--bg-panel);
+}
+
+.dispense-slot {
+  position: relative;
+  width: 22rem;
+  height: 12rem;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  border-top: 0.375rem solid #000;
+  border-radius: 0.25rem 0.25rem 0 0;
+}
+
+.bill {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 17rem;
+  height: 9rem;
+  margin-left: -8.5rem;
+  border-radius: 0.375rem;
+  background:
+    repeating-linear-gradient(45deg, rgba(20, 40, 10, 0.06) 0 0.25rem, transparent 0.25rem 0.5rem),
+    linear-gradient(180deg, #d4e8bb, #9fc57d);
+  box-shadow: inset 0 0 0 0.375rem rgba(20, 40, 10, 0.12), 0 0.25rem 0.75rem rgba(0, 0, 0, 0.35);
+  transform: rotate(var(--r));
+  transform-origin: 50% 0;
+}
+
+.bill span {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: rgba(20, 40, 10, 0.45);
+}
+
+.dispense-amount {
+  font-size: 3.5rem;
+  font-weight: 500;
+  font-stretch: 110%;
+  letter-spacing: -0.03em;
+}

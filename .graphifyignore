@@ -1,0 +1,13 @@
+# Generated output - not source
+brag-output/
+html/
+graphify-out/
+.claude/
+
+# UI sound effects (audio, nothing to transcribe)
+*.ogg
+*.mp3
+*.wav
+
+# Lockfiles
+package-lock.json

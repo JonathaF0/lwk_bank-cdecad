@@ -1,0 +1,5 @@
+node_modules/
+brag-output/
+graphify-out/
+.claude/
+*.log

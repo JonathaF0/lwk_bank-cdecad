@@ -1,0 +1,228 @@
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource-variable/jetbrains-mono/index.css';
+
+:root {
+  /* Surfaces: opaque on purpose. NUI composites over the game, so blur has nothing to sample. */
+  --bg-panel: #0e100f;
+  --bg-raised: #161917;
+  --bg-sunken: #0a0b0a;
+  --line: rgba(236, 239, 234, 0.09);
+  --line-strong: rgba(236, 239, 234, 0.18);
+
+  --text: #eceeea;
+  --text-muted: #8d948f;
+  --text-faint: #5d635f;
+
+  --accent: #c8f031;
+  --accent-ink: #0b0d06;
+  --accent-dim: rgba(200, 240, 49, 0.14);
+  --accent-hover: #d6f75e;
+  --accent-grid: rgba(200, 240, 49, 0.16);
+  --neg: #ff7a5c;
+  --neg-dim: rgba(255, 122, 92, 0.14);
+  --warn: #ffc85c;
+
+  --r-panel: 1.25rem;
+  --r-ctl: 0.5rem;
+
+  --font-display: 'Archivo Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* 1rem = 16px at 1080p, scales with the game resolution (720p -> 4K, ultrawide safe). */
+  font-size: min(1.4815vh, 0.8333vw);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* No visible scrollbars anywhere: lists still scroll with the wheel. */
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  /* Transparent so the game shows through when the UI is closed. */
+  background: transparent;
+}
+
+body {
+  font-family: var(--font-display);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* Browser dev only: a stand-in for the game world so contrast can be judged. */
+body.dev-env {
+  background:
+    radial-gradient(ellipse at 70% 110%, #c98a4e 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 0%, #5b7fa3 0%, transparent 60%),
+    linear-gradient(180deg, #34506b 0%, #8a7a63 62%, #3a3128 100%);
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+input {
+  user-select: text;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- shared controls ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 3rem;
+  padding: 0 1.25rem;
+  border-radius: var(--r-ctl);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s var(--ease-out), opacity 0.2s;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn-ghost {
+  background: var(--bg-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input {
+  height: 3rem;
+  padding: 0 1rem;
+  border-radius: var(--r-ctl);
+  border: 0;
+  background: var(--bg-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+  outline: none;
+  transition: box-shadow 0.2s;
+}
+
+.input:focus {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+.chip {
+  height: 2rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  background: var(--bg-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 0.8125rem;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.chip:hover {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--text);
+  color: var(--bg-panel);
+}
+
+.error-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--neg);
+  font-size: 0.875rem;
+  min-height: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

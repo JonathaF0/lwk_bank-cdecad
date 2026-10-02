@@ -1,0 +1,32 @@
+Sound effects - sources and licences
+=====================================
+
+Every file here is CC0 1.0 (public domain dedication): free for commercial use,
+redistribution and modification, no attribution required. Downloaded 2026-10-01.
+
+counter.mp3   "money counter.wav" by 21100354 (Freesound #595041)
+              https://freesound.org/people/21100354/sounds/595041/
+              CC0 - Freesound HQ preview (128 kbps); swap in the original WAV for full quality
+
+printer.mp3   "Receipt Printer 01.wav" by thepodcastdoctor (Freesound #476011)
+              https://freesound.org/people/thepodcastdoctor/sounds/476011/
+              CC0 - Freesound HQ preview (128 kbps)
+
+keypad.mp3    "atm cash machine beep.flac" by kyles (Freesound #637157)
+              https://freesound.org/people/kyles/sounds/637157/
+              CC0 - Freesound HQ preview (128 kbps)
+
+cardIn.mp3    "id_insert" by Dakamakat (Freesound #717370)
+cardOut.mp3   https://freesound.org/people/Dakamakat/sounds/717370/
+              CC0 - Freesound HQ preview (128 kbps); cardOut is the same file
+
+tap.ogg       click_002.ogg        Kenney "Interface Sounds" 1.0
+toggle.ogg    toggle_001.ogg       https://kenney.nl/assets/interface-sounds
+chime.ogg     confirmation_004.ogg CC0 (licence file included in the pack)
+error.ogg     error_004.ogg
+open.ogg      open_002.ogg
+close.ogg     close_002.ogg
+
+Replacing a sound: drop a file named after the slot (e.g. counter.wav) into this
+folder. .ogg is tried first, then .mp3, then .wav. Per-slot volume/trim lives in
+web/src/sound.ts (TUNE).
