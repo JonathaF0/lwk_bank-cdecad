@@ -94,7 +94,13 @@
     "err_bill_none": "You have no unpaid bills.",
     "err_receipt_inventory": "Receipts need an inventory resource on this server.",
     "err_receipt_missing": "Nothing to print for that.",
-    "err_receipt_space": "No space in your inventory for the receipt."
+    "err_receipt_space": "No space in your inventory for the receipt.",
+    "opening_bank": "Talking to the teller...",
+    "opening_atm": "Inserting card...",
+    "target_bank": "Open bank",
+    "target_atm": "Use ATM",
+    "prompt_bank": "[E] Bank",
+    "prompt_atm": "[E] ATM"
   },
   "ui": {}
 }

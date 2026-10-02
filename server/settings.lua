@@ -17,4 +17,19 @@ function ConfigForUI()
     }
 end
 
-Settings = { set = function(next) current = next end }
+--- What clients need to place banks/ATMs/blips; replicated so edits apply live.
+local function publishWorld()
+    local c = Cfg()
+    GlobalState.lwk_bank_world = {
+        bankName = c.bankName, banks = c.banks, atmModels = c.atmModels, blips = c.blips, interaction = c.interaction,
+    }
+end
+
+Settings = {
+    set = function(next)
+        current = next
+        publishWorld()
+    end,
+}
+
+publishWorld()
