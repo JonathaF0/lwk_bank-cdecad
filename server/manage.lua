@@ -39,10 +39,16 @@ Bank.action('accountCreate', function(src, identifier, p)
     local name = Logic.text(p.name, 1, 28)
     if not name then return fail(L('err_name')) end
     if ownedCount(identifier) >= cfg.accounts.maxOwned then return fail(L('err_max_accounts', cfg.accounts.maxOwned)) end
+    if kind == 'shared' and Accounts.sharedNameTaken(name) then return fail(L('err_name_taken')) end
     local fee = cfg.accounts.creationFee
     if fee > 0 and not Bridge.removeMoney(src, 'cash', fee, 'lwk_bank account fee') then return fail(L('err_fee_cash', fee)) end
-    MySQL.insert.await('INSERT INTO lwk_bank_accounts (iban, type, name, owner, created_at) VALUES (?, ?, ?, ?, ?)',
+    -- The unique index can still refuse a name taken a moment ago: give the fee back then.
+    local okInsert, id = pcall(MySQL.insert.await, 'INSERT INTO lwk_bank_accounts (iban, type, name, owner, created_at) VALUES (?, ?, ?, ?, ?)',
         { Accounts.newIban(), kind, name, identifier, Logic.now() })
+    if not okInsert or not id then
+        if fee > 0 then Bridge.addMoney(src, 'cash', fee, 'lwk_bank account fee refund') end
+        return fail(L('err_name_taken'))
+    end
     Logs.event(src, 'admin', 'Account opened', ('%s (%s)'):format(name, kind))
     return ok(src)
 end)
@@ -52,7 +58,9 @@ Bank.action('accountRename', function(src, identifier, p)
     if not row then return fail(err) end
     local name = Logic.text(p.name, 1, 28)
     if not name then return fail(L('err_name')) end
-    MySQL.update.await('UPDATE lwk_bank_accounts SET name = ? WHERE id = ?', { name, row.id })
+    if row.type == 'shared' and Accounts.sharedNameTaken(name, row.id) then return fail(L('err_name_taken')) end
+    local okUpdate, changed = pcall(MySQL.update.await, 'UPDATE lwk_bank_accounts SET name = ? WHERE id = ?', { name, row.id })
+    if not okUpdate or not changed then return fail(L('err_name_taken')) end
     return ok(src)
 end)
 

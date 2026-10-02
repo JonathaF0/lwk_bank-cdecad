@@ -81,6 +81,13 @@ function Logic.creditBand(score, bands)
     return pick
 end
 
+--- "name 2", "name 3"... cut to fit maxLen, for when `name` is already taken.
+function Logic.suffixed(name, n, maxLen)
+    if n <= 1 then return name:sub(1, maxLen) end
+    local suffix = ' ' .. n
+    return name:sub(1, maxLen - #suffix) .. suffix
+end
+
 -- Config editor --------------------------------------------------------------------
 
 --- Checks a value from the in-game editor against its config.lua default (the template):

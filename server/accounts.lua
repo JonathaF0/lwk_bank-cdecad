@@ -31,6 +31,20 @@ function Accounts.byIban(iban)
     return MySQL.single.await('SELECT * FROM lwk_bank_accounts WHERE iban = ?', { iban })
 end
 
+-- Shared account names are unique: other scripts address shared accounts by name
+-- (server/compat.lua). Compared with the column's case-insensitive collation.
+function Accounts.sharedNameTaken(name, exceptId)
+    return MySQL.scalar.await("SELECT 1 FROM lwk_bank_accounts WHERE type = 'shared' AND name = ? AND id <> ? LIMIT 1",
+        { name, exceptId or 0 }) ~= nil
+end
+
+--- `name`, or "name 2", "name 3"... if another shared account already uses it.
+function Accounts.uniqueSharedName(name, exceptId)
+    local n = 1
+    while Accounts.sharedNameTaken(Logic.suffixed(name, n, 48), exceptId) do n = n + 1 end
+    return Logic.suffixed(name, n, 48)
+end
+
 function Accounts.ensureDefault(identifier)
     local row = MySQL.single.await('SELECT * FROM lwk_bank_accounts WHERE owner = ? AND is_default = 1', { identifier })
     if row then return row end

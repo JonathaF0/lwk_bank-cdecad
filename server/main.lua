@@ -13,6 +13,20 @@ CreateThread(function()
     for statement in sql:gsub('%-%-[^\n]*', ''):gmatch('[^;]+') do
         if statement:find('%S') then MySQL.query.await(statement) end
     end
+    -- Shared account names became unique (other scripts address them by name). Older
+    -- installs may hold duplicates: rename later ones "name 2", ... then let the database
+    -- enforce it. Needs MySQL 5.7+ / MariaDB 10.2+; without it the checks in code still apply.
+    if not MySQL.scalar.await("SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'lwk_bank_accounts' AND column_name = 'shared_name'") then
+        -- Newest first, so the oldest account keeps the original name.
+        for _, a in ipairs(MySQL.query.await("SELECT id, name FROM lwk_bank_accounts WHERE type = 'shared' ORDER BY id DESC")) do
+            local unique = Accounts.uniqueSharedName(a.name, a.id)
+            if unique ~= a.name then MySQL.update.await('UPDATE lwk_bank_accounts SET name = ? WHERE id = ?', { unique, a.id }) end
+        end
+        local ok, err = pcall(MySQL.query.await, [[ALTER TABLE lwk_bank_accounts
+            ADD COLUMN shared_name VARCHAR(48) AS (IF(type = 'shared', name, NULL)) STORED,
+            ADD UNIQUE KEY shared_name (shared_name)]])
+        if not ok then print(('^3[lwk_bank] Could not add the unique shared-name index (%s). Names are still checked in code.^0'):format(err)) end
+    end
 end)
 
 -- Sessions + locks -------------------------------------------------------------

@@ -52,10 +52,11 @@ function Compat.named(name, create)
 end
 
 --- New shared account owned by `owner`, with members (identifiers) given full access.
+--- A name already in use gets a number added ("Crew Fund 2").
 function Compat.createShared(owner, name, balance, members)
     local id = MySQL.insert.await(
         "INSERT INTO lwk_bank_accounts (iban, type, name, owner, balance, created_at) VALUES (?, 'shared', ?, ?, ?, ?)",
-        { Accounts.newIban(), Logic.text(name, 1, 48) or 'Shared', owner, math.max(0, math.floor(tonumber(balance) or 0)), Logic.now() })
+        { Accounts.newIban(), Accounts.uniqueSharedName(Logic.text(name, 1, 48) or 'Shared'), owner, math.max(0, math.floor(tonumber(balance) or 0)), Logic.now() })
     for _, m in ipairs(members or {}) do
         if m ~= owner then Compat.addMember(Accounts.byId(id), m) end
     end
@@ -153,6 +154,7 @@ local renewed = {
     changeAccountName = function(account, newName)
         local row, name = Compat.named(account, false), Logic.text(newName, 1, 48)
         if not row or not name then return false end
+        if row.type == 'shared' and Accounts.sharedNameTaken(name, row.id) then return false end
         MySQL.update.await('UPDATE lwk_bank_accounts SET name = ? WHERE id = ?', { name, row.id })
         return true
     end,
