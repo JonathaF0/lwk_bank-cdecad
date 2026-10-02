@@ -20,6 +20,61 @@ Works with **Qbox, QBCore and ESX** (detected automatically).
 - **Translations**: every string lives in `locales/<code>.json`, and dates and money use the language's own formats.
 - **Sounds**: short, quiet, realistic (CC0). They can be turned off or replaced.
 
+## Compatibility
+
+Everything is detected automatically. Each one can also be forced in `config.lua`.
+
+| Frameworks | Status | Notes |
+| --- | :---: | --- |
+| qbox | ✅ | |
+| qb-core | ✅ | |
+| esx | ✅ | |
+| custom | ⚠️ | Requires manual implementation (`bridge/framework.lua`) |
+
+| Interactions | Status | Notes |
+| --- | :---: | --- |
+| ox_target | ✅ | |
+| qb-target | ✅ | |
+| none | ✅ | Built-in "Press E" prompt |
+| custom | ⚠️ | Requires manual implementation (`client/world.lua`) |
+
+| Inventories | Status | Notes |
+| --- | :---: | --- |
+| ox_inventory | ✅ | Cards and receipts as items, item images included |
+| qb-inventory | ✅ | Cards and receipts as items |
+| qs-inventory | ✅ | Cards and receipts as items |
+| none | ✅ | Cards live in the bank app only |
+| custom | ⚠️ | Requires manual implementation (`bridge/inventory.lua`) |
+
+| Notifications | Status | Notes |
+| --- | :---: | --- |
+| ox_lib | ✅ | Default |
+| esx | ✅ | |
+| qb | ✅ | Uses qbx_core's on Qbox |
+| okok | ✅ | okokNotify |
+| wasabi_notify | ✅ | |
+| custom | ⚠️ | Requires manual implementation (`bridge/notify.lua`) |
+
+| Billing | Status | Notes |
+| --- | :---: | --- |
+| okokBilling | ✅ | Unpaid invoices under Bills |
+| esx_billing | ✅ | Unpaid invoices under Bills |
+| qb (phone invoices) | ✅ | Unpaid invoices under Bills |
+| custom | ⚠️ | Requires manual implementation (`bridge/billing.lua`) |
+
+| Banking | Status | Notes |
+| --- | :---: | --- |
+| Renewed-Banking | ✅ | Drop-in replacement, balances imported |
+| qb-banking | ✅ | Drop-in replacement, balances imported |
+| qb-management | ✅ | Drop-in replacement, balances imported |
+| okokBanking | ✅ | Drop-in replacement, balances imported |
+| esx_addonaccount | ✅ | Keeps holding society money on ESX when running; without it the bank holds it |
+
+| Other | Status | Notes |
+| --- | :---: | --- |
+| jg-dealerships | ✅ | Financed vehicles appear under the player's bills |
+| lation_shops | ✅ | Shop balances go through LWK Bank; bank purchases show in the player's activity |
+
 ## Requirements
 
 | Resource | Why |
