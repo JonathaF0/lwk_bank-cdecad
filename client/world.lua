@@ -146,6 +146,7 @@ AddStateBagChangeHandler('lwk_bank_world', 'global', function(_, _, value)
     if not value then return end
     clear()
     world = value
+    Locale.reload(value.locale or Config.locale)
     build()
 end)
 

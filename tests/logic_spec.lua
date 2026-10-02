@@ -46,3 +46,37 @@ local bands = { { min = 300, label = 'Very Poor' }, { min = 670, label = 'Good' 
 eq(Logic.creditBand(669, bands).label, 'Very Poor')
 eq(Logic.creditBand(670, bands).label, 'Good')
 eq(Logic.creditBand(100, bands).label, 'Very Poor', 'below range')
+
+-- config editor: sanitize against the defaults --------------------------------------
+local tpl = { name = 'LWK', on = true, n = 5, list = { 1, 2 }, rows = { { id = 'a', rate = 1 } }, sub = { x = 1 } }
+local v, bad = Logic.sanitize({ name = 'X', on = false, n = '7', list = {}, rows = { { id = 'b', rate = 2, junk = 1 } }, extra = 1 }, tpl)
+eq(bad, nil)
+eq(v.name, 'X'); eq(v.on, false); eq(v.n, 7, 'numeric string coerced'); eq(#v.list, 0, 'empty list ok')
+eq(v.rows[1].id, 'b'); eq(v.rows[1].junk, nil, 'extra row key dropped'); eq(v.extra, nil, 'extra key dropped')
+eq(v.sub.x, 1, 'missing key defaulted')
+eq(select(2, Logic.sanitize({ on = 'yes' }, tpl)), 'on', 'wrong type')
+eq(select(2, Logic.sanitize({ rows = { { rate = 'x' } } }, tpl)), 'rows[1].rate', 'bad row field path')
+eq(select(2, Logic.sanitize({ n = 0 / 0 }, tpl)), 'n', 'NaN')
+eq(select(2, Logic.sanitize({ sub = 5 }, tpl)), 'sub', 'table expected')
+
+-- config editor: semantic checks ------------------------------------------------------
+local function cfg()
+    return {
+        bankName = 'LWK Bank', accent = '#c8f031', currency = 'USD', sound = { enabled = true, volume = 0.5 },
+        accounts = { ibanPrefix = 'LW', maxOwned = 5 }, savingsRates = { personal = 1 }, interaction = { distance = 2 },
+        blips = { scale = 0.7 }, logs = { bigAmount = 5 },
+        cards = { maxCards = 10, pinAttempts = 3, tiers = { gold = { fee = 1 } } },
+        loans = { plans = { { id = 'starter', name = 'Starter', min = 1, max = 2, rate = 1 } }, terms = { 12 },
+            bands = { { min = 300, label = 'Poor', adjust = -3 } } },
+        banks = { { label = 'Legion', x = -1, y = 2, z = 3, heading = 0 } },
+    }
+end
+eq(Logic.checkConfig(cfg()), nil, 'defaults pass (negative adjust and coords allowed)')
+local c = cfg(); c.accent = 'green'; eq(Logic.checkConfig(c), 'accent')
+c = cfg(); c.currency = 'usd'; eq(Logic.checkConfig(c), 'currency')
+c = cfg(); c.cards.tiers.gold.fee = -1; eq(Logic.checkConfig(c), 'cards.tiers.gold.fee')
+c = cfg(); c.loans.plans[1].max = 0; eq(Logic.checkConfig(c), 'loans.plans[1]', 'max below min')
+c = cfg(); c.loans.plans[2] = { id = 'starter', name = 'Dup', min = 1, max = 2, rate = 1 }; eq(Logic.checkConfig(c), 'loans.plans[2]', 'duplicate id')
+c = cfg(); c.loans.terms = { 1.5 }; eq(Logic.checkConfig(c), 'loans.terms[1]')
+c = cfg(); c.sound.volume = 2; eq(Logic.checkConfig(c), 'sound.volume')
+c = cfg(); c.banks[1].label = ' '; eq(Logic.checkConfig(c), 'banks[1]')

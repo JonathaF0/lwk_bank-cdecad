@@ -1,15 +1,16 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { fetchNui, isBrowser, normalize, useNuiMessage, type BankData } from './nui';
+import { fetchNui, isBrowser, normalize, useNuiMessage, type AdminConfig, type BankData } from './nui';
 import { BankProvider, useBank } from './store';
 import { GridFloor, Icon } from './fx';
 import { Bank } from './bank/Bank';
 import { Atm } from './atm/Atm';
+import { ConfigEditor } from './admin/ConfigEditor';
 import { accentTokens } from './logic';
 import { configureSound, play, preloadSounds, type SoundName } from './sound';
 
-type Mode = 'bank' | 'atm';
+type Mode = 'bank' | 'atm' | 'config';
 // Browser dev toolbar; import.meta.env.DEV is false in the build, so it's never bundled.
 const DevBar = import.meta.env.DEV ? lazy(() => import('./DevBar').then((m) => ({ default: m.DevBar }))) : null;
 type Incoming = { id: number; amount: number; from: string };
@@ -18,6 +19,7 @@ export function App() {
   const [data, setData] = useState<BankData | null>(null);
   const [mode, setMode] = useState<Mode | null>(null);
   const [incoming, setIncoming] = useState<Incoming | null>(null);
+  const [admin, setAdmin] = useState<AdminConfig | null>(null);
   const scene = useRef<HTMLDivElement>(null);
   const intro = useRef<gsap.core.Timeline | null>(null);
   // useGSAP's revert also seeks the old intro back to 0, which fires onReverseComplete;
@@ -26,6 +28,12 @@ export function App() {
 
   useNuiMessage((msg) => {
     if (msg.action === 'close') return close();
+    if (msg.action === 'openConfig') {
+      closing.current = false;
+      setAdmin(msg.config);
+      if (!mode) play('open');
+      return setMode('config');
+    }
     if (msg.action === 'incoming') {
       play('chime');
       return setIncoming({ id: Date.now(), amount: msg.amount, from: msg.from });
@@ -69,11 +77,15 @@ export function App() {
   const config = data?.config;
   useEffect(() => {
     if (!config) return;
-    const tokens = accentTokens(config.accent);
-    if (tokens) for (const [k, v] of Object.entries(tokens)) document.documentElement.style.setProperty(k, v);
     configureSound(config.sound);
     if (config.sound.enabled) preloadSounds();
   }, [config]);
+
+  const accent = mode === 'config' ? admin?.accent : config?.accent;
+  useEffect(() => {
+    const tokens = accent && accentTokens(accent);
+    if (tokens) for (const [k, v] of Object.entries(tokens)) document.documentElement.style.setProperty(k, v);
+  }, [accent]);
 
   // One delegated listener gives every button a press sound; data-sound picks another or "none".
   useEffect(() => {
@@ -104,7 +116,14 @@ export function App() {
           <DevBar />
         </Suspense>
       )}
-      {mode && data && (
+      {mode === 'config' && admin && (
+        <div ref={scene} className="scene">
+          <div className="vignette" />
+          <GridFloor />
+          <ConfigEditor data={admin} setData={setAdmin} onClose={close} />
+        </div>
+      )}
+      {mode && mode !== 'config' && data && (
         <BankProvider data={data} setData={setData}>
           <div ref={scene} className="scene">
             <div className="vignette" />

@@ -1,4 +1,4 @@
-import { getMockData, patchMockConfig, simulateIncoming } from './mock';
+import { getMockAdmin, getMockData, patchMockConfig, simulateIncoming } from './mock';
 import type { NuiMessage } from './nui';
 
 /** Browser-only toolbar that fakes Lua messages through the real message path. */
@@ -13,6 +13,7 @@ export function DevBar() {
       <span>Dev</span>
       <button onClick={() => send({ action: 'open', data: getMockData() })}>Bank</button>
       <button onClick={() => send({ action: 'openAtm', data: getMockData() })}>ATM</button>
+      <button onClick={() => send({ action: 'openConfig', config: getMockAdmin() })}>Config</button>
       <button
         onClick={() => {
           send({ action: 'update', data: simulateIncoming() });

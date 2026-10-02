@@ -37,6 +37,11 @@ AddEventHandler('playerDropped', function()
     sessions[source], busy[source] = nil, nil
 end)
 
+-- Settings saved in the editor: everyone with the UI open gets the new config straight away.
+AddEventHandler('lwk_bank:configChanged', function()
+    for src in pairs(sessions) do Bank.refresh(src) end
+end)
+
 local function ok(src) return { ok = true, data = Bank.build(src) } end
 local function fail(message) return { ok = false, error = message } end
 Bank.ok, Bank.fail = ok, fail

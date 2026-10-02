@@ -237,10 +237,19 @@ export interface BankData {
   ui?: Record<string, string>;
 }
 
-export type Result = { ok: true; data: BankData } | { ok: false; error: string };
+export type Result<D = BankData> = { ok: true; data: D } | { ok: false; error: string };
+
+/** /bankconfig: the editable part of the config (current + config.lua defaults). */
+export interface AdminConfig {
+  values: Record<string, unknown>;
+  defaults: Record<string, unknown>;
+  ui?: Record<string, string>;
+  accent: string;
+}
 
 export type NuiMessage =
   | { action: 'open' | 'openAtm' | 'update'; data: BankData }
+  | { action: 'openConfig'; config: AdminConfig }
   | { action: 'close' }
   | { action: 'incoming'; amount: number; from: string };
 

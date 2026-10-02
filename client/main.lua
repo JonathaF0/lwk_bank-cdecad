@@ -2,6 +2,11 @@
 
 local isOpen = false
 
+--- Bank name as currently configured (the editor can change it live).
+local function bankName()
+    return (GlobalState.lwk_bank_world or Config).bankName
+end
+
 -- Every action the UI can send (see web/src/nui.ts). Each one maps 1:1 to a
 -- server callback 'lwk_bank:<event>' that returns a Result.
 local ACTIONS = {
@@ -10,6 +15,7 @@ local ACTIONS = {
     'savingsMove', 'goalCreate', 'goalMove', 'goalDelete',
     'loanApply', 'loanPay', 'billPay', 'billPayAll', 'receiptPrint',
     'accountCreate', 'accountRename', 'accountDelete', 'accountIban', 'memberAdd', 'memberRemove', 'memberPerms',
+    'adminConfigSave', 'adminConfigReset',
 }
 
 for _, action in ipairs(ACTIONS) do
@@ -34,7 +40,7 @@ function OpenBank(mode)
     if isOpen then return false end
     local data = lib.callback.await('lwk_bank:open', false, mode)
     if not data then
-        lib.notify({ title = Config.bankName, description = L('err_not_here'), type = 'error' })
+        lib.notify({ title = bankName(), description = L('err_not_here'), type = 'error' })
         return false
     end
     isOpen = true
@@ -53,7 +59,7 @@ RegisterNetEvent('lwk_bank:incoming', function(amount, from)
     if isOpen then
         SendNUIMessage({ action = 'incoming', amount = amount, from = from })
     else
-        lib.notify({ title = Config.bankName, description = L('incoming', amount, from), type = 'success' })
+        lib.notify({ title = bankName(), description = L('incoming', amount, from), type = 'success' })
     end
 end)
 
@@ -65,8 +71,23 @@ RegisterNetEvent('lwk_bank:forceClose', function()
     end
 end)
 
+-- /bankconfig: the server checked admin rights and sent the editable config.
+RegisterNetEvent('lwk_bank:openConfig', function(data)
+    if isOpen then return end
+    isOpen = true
+    SendNUIMessage({ action = 'openConfig', config = data })
+    SetNuiFocus(true, true)
+end)
+
+-- "Add bank here" in the editor: where the admin is standing.
+RegisterNUICallback('adminHere', function(_, cb)
+    local pos = GetEntityCoords(cache.ped)
+    local r = function(n) return math.floor(n * 100 + 0.5) / 100 end
+    cb({ x = r(pos.x), y = r(pos.y), z = r(pos.z), heading = r(GetEntityHeading(cache.ped)) })
+end)
+
 RegisterNetEvent('lwk_bank:adminInfo', function(text)
-    lib.alertDialog({ header = Config.bankName, content = text, centered = true, size = 'lg' })
+    lib.alertDialog({ header = bankName(), content = text, centered = true, size = 'lg' })
 end)
 
 AddEventHandler('onResourceStop', function(res)

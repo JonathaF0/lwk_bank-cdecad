@@ -81,4 +81,89 @@ function Logic.creditBand(score, bands)
     return pick
 end
 
+-- Config editor --------------------------------------------------------------------
+
+--- Checks a value from the in-game editor against its config.lua default (the template):
+--- same types, same keys (extra ones dropped, missing ones defaulted), arrays shaped like
+--- the template's first item. Returns the clean value, or nil + the path of the bad field.
+function Logic.sanitize(value, template, path)
+    path = path or ''
+    local tt = type(template)
+    if tt == 'number' then
+        value = tonumber(value)
+        if not value or value ~= value or math.abs(value) == math.huge then return nil, path end
+        return value
+    elseif tt == 'string' then
+        if type(value) ~= 'string' or #value > 256 then return nil, path end
+        return value
+    elseif tt == 'boolean' then
+        if type(value) ~= 'boolean' then return nil, path end
+        return value
+    elseif tt == 'table' and type(value) == 'table' then
+        local out = {}
+        if template[1] ~= nil then
+            if #value > 200 then return nil, path end
+            for i = 1, #value do
+                local v, bad = Logic.sanitize(value[i], template[1], ('%s[%d]'):format(path, i))
+                if v == nil then return nil, bad end
+                out[i] = v
+            end
+            return out
+        end
+        for k, t in pairs(template) do
+            local key = path == '' and k or (path .. '.' .. k)
+            if value[k] == nil then
+                out[k] = t
+            else
+                local v, bad = Logic.sanitize(value[k], t, key)
+                if v == nil then return nil, bad end
+                out[k] = v
+            end
+        end
+        return out
+    end
+    return nil, path
+end
+
+local function nonNegative(t, path, skip)
+    for k, v in pairs(t) do
+        local key = type(k) == 'number' and ('%s[%d]'):format(path, k) or (path .. '.' .. k)
+        if type(v) == 'number' and v < 0 and not skip[k] then return key end
+        if type(v) == 'table' then
+            local bad = nonNegative(v, key, skip)
+            if bad then return bad end
+        end
+    end
+end
+
+--- Rules a type check can't express. Returns the path of the first bad field, or nil.
+function Logic.checkConfig(c)
+    if not c.bankName:find('%S') or #c.bankName > 32 then return 'bankName' end
+    if not (c.accent:match('^#%x%x%x%x%x%x$') or c.accent:match('^#%x%x%x$')) then return 'accent' end
+    if not c.currency:match('^%u%u%u$') then return 'currency' end
+    if not c.accounts.ibanPrefix:match('^%u%u?%u?%u?$') then return 'accounts.ibanPrefix' end
+    if c.sound.volume > 1 then return 'sound.volume' end
+    for _, key in ipairs({ 'cards', 'accounts', 'savingsRates', 'loans', 'interaction', 'blips', 'logs', 'sound' }) do
+        local bad = nonNegative(c[key], key, { adjust = true })
+        if bad then return bad end
+    end
+    if c.cards.maxCards < 1 or c.cards.pinAttempts < 1 then return 'cards' end
+    if #c.loans.plans == 0 then return 'loans.plans' end
+    local ids = {}
+    for i, p in ipairs(c.loans.plans) do
+        if not p.id:match('^[%w_-]+$') or ids[p.id] or not p.name:find('%S') or p.max < p.min then
+            return ('loans.plans[%d]'):format(i)
+        end
+        ids[p.id] = true
+    end
+    if #c.loans.terms == 0 then return 'loans.terms' end
+    for i, d in ipairs(c.loans.terms) do
+        if d < 1 or d % 1 ~= 0 then return ('loans.terms[%d]'):format(i) end
+    end
+    if #c.loans.bands == 0 then return 'loans.bands' end
+    for i, b in ipairs(c.banks) do
+        if not b.label:find('%S') then return ('banks[%d]'):format(i) end
+    end
+end
+
 return Logic

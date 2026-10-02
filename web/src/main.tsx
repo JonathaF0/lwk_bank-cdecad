@@ -5,6 +5,7 @@ import './styles/fx.css';
 import './styles/bank.css';
 import './styles/atm.css';
 import './styles/features.css';
+import './styles/admin.css';
 import { App } from './App';
 import { fetchNui, isBrowser, setMockHandler } from './nui';
 import { preloadSounds } from './sound';

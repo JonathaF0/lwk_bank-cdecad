@@ -1,4 +1,4 @@
-import { DEFAULT_CONFIG, type Account, type BankConfig, type BankData, type CardTier, type Perms, type Result, type Transaction, type TxType } from './nui';
+import { DEFAULT_CONFIG, type Account, type AdminConfig, type BankConfig, type BankData, type CardTier, type Perms, type Result, type Transaction, type TxType } from './nui';
 import { borrowLimit, creditBand, quoteLoan } from './logic';
 
 /* Browser-only stand-in for the Lua side. fetchNui only calls this when
@@ -134,6 +134,33 @@ export function simulateIncoming(): BankData {
   return getMockData();
 }
 
+/* ---------- /bankconfig: mirrors the editable part of config.lua ---------- */
+const ADMIN_DEFAULTS = {
+  locale: 'en',
+  bankName: DEFAULT_CONFIG.bankName,
+  accent: DEFAULT_CONFIG.accent,
+  currency: DEFAULT_CONFIG.currency,
+  features: { ...DEFAULT_CONFIG.features, business: true },
+  sound: DEFAULT_CONFIG.sound,
+  cards: { ...DEFAULT_CONFIG.cards, pinAttempts: 3, item: 'bank_card' },
+  savingsRates: DEFAULT_CONFIG.savingsRates,
+  loans: { ...DEFAULT_CONFIG.loans, lateFee: 5, startingScore: 650 },
+  accounts: DEFAULT_CONFIG.accounts,
+  business: { employeePerms: { deposit: true, withdraw: false, transfer: false, loans: false } },
+  receipts: { item: 'bank_receipt' },
+  interaction: { distance: 2, openAnim: true, openTime: 1500 },
+  blips: { enabled: true, sprite: 108, color: 2, scale: 0.7 },
+  atmModels: ['prop_atm_01', 'prop_atm_02', 'prop_atm_03', 'prop_fleeca_atm'],
+  banks: [
+    { label: 'Legion Square', x: 149.05, y: -1041.3, z: 29.37, heading: 340 },
+    { label: 'Hawick Avenue', x: 313.32, y: -280.03, z: 54.17, heading: 340 },
+    { label: 'Paleto Bay', x: -111.98, y: 6470.56, z: 31.63, heading: 135 },
+  ],
+  logs: { webhook: '', oxLogger: false, bigAmount: 50000 },
+};
+let adminValues = JSON.parse(JSON.stringify(ADMIN_DEFAULTS));
+export const getMockAdmin = (): AdminConfig => ({ values: JSON.parse(JSON.stringify(adminValues)), defaults: ADMIN_DEFAULTS, accent: adminValues.accent });
+
 export async function mockHandler(event: string, p: any): Promise<unknown> {
   await wait(event === 'close' ? 0 : 450);
   const a = p?.accountId ? acc(p.accountId) : undefined;
@@ -145,6 +172,15 @@ export async function mockHandler(event: string, p: any): Promise<unknown> {
   switch (event) {
     case 'close':
       return {};
+    case 'adminHere':
+      return { x: 150.12, y: -1040.48, z: 29.37, heading: 337.5 };
+    case 'adminConfigSave':
+      if (!/^#[0-9a-f]{6}$/i.test(p.accent)) return { ok: false, error: "That value isn't valid: accent" };
+      adminValues = JSON.parse(JSON.stringify(p));
+      return { ok: true, data: getMockAdmin() };
+    case 'adminConfigReset':
+      adminValues = JSON.parse(JSON.stringify(ADMIN_DEFAULTS));
+      return { ok: true, data: getMockAdmin() };
     case 'verifyPin':
       return pins[p.cardId] === p.pin ? { ok: true } : { ok: false, error: 'Incorrect PIN · 2 attempts left' };
 
