@@ -38,12 +38,15 @@ function Compat.business(name, force)
 end
 
 --- An account other scripts refer to by name: business first, then a shared account.
+--- (Personal accounts are never addressed by name, like in the banks this replaces.)
+--- create: make a business account for an unknown name; only when adding money, so a
+--- typo'd name in another script can't leave empty accounts behind.
 function Compat.named(name, create)
     local row = Compat.business(name, false)
     if row then return row end
     local n = strip(name)
     if not n then return nil end
-    row = MySQL.single.await("SELECT * FROM lwk_bank_accounts WHERE type <> 'business' AND is_default = 0 AND name = ? ORDER BY id LIMIT 1", { n })
+    row = MySQL.single.await("SELECT * FROM lwk_bank_accounts WHERE type = 'shared' AND name = ? ORDER BY id LIMIT 1", { n })
     if row then return row end
     if create then return Compat.business(n, true) end
 end
@@ -117,7 +120,7 @@ local renewed = {
         return row and Accounts.balance(row) or false
     end,
     addAccountMoney = function(account, amount) return add(Compat.named(account, true), amount) end,
-    removeAccountMoney = function(account, amount) return remove(Compat.named(account, true), amount) end,
+    removeAccountMoney = function(account, amount) return remove(Compat.named(account, false), amount) end,
     handleTransaction = function(account, title, amount, message, issuer, receiver, transType, transID)
         local incoming = transType == 'deposit'
         record(account, amount, incoming, (message and message ~= '') and message or title, incoming and issuer or receiver)
@@ -186,8 +189,8 @@ local qbBanking = {
     end,
     AddMoney = function(name, amount, reason) return add(Compat.named(name, true), amount, reason) end,
     AddGangMoney = function(name, amount, reason) return add(Compat.named(name, true), amount, reason) end,
-    RemoveMoney = function(name, amount, reason) return remove(Compat.named(name, true), amount, reason) end,
-    RemoveGangMoney = function(name, amount, reason) return remove(Compat.named(name, true), amount, reason) end,
+    RemoveMoney = function(name, amount, reason) return remove(Compat.named(name, false), amount, reason) end,
+    RemoveGangMoney = function(name, amount, reason) return remove(Compat.named(name, false), amount, reason) end,
     GetAccount = function(name) return qbAccount(Compat.named(name, false)) end,
     GetGangAccount = function(name) return qbAccount(Compat.named(name, false)) end,
     GetAccountBalance = function(name)
@@ -206,15 +209,15 @@ local qbManagement = {
     GetGangAccount = balanceOf,
     AddMoney = function(name, amount) return add(Compat.named(name, true), amount) end,
     AddGangMoney = function(name, amount) return add(Compat.named(name, true), amount) end,
-    RemoveMoney = function(name, amount) return remove(Compat.named(name, true), amount) end,
-    RemoveGangMoney = function(name, amount) return remove(Compat.named(name, true), amount) end,
+    RemoveMoney = function(name, amount) return remove(Compat.named(name, false), amount) end,
+    RemoveGangMoney = function(name, amount) return remove(Compat.named(name, false), amount) end,
 }
 
 -- okokBanking ---------------------------------------------------------------------------
 local okok = {
     GetAccount = balanceOf,
     AddMoney = function(society, value) return add(Compat.named(society, true), value) end,
-    RemoveMoney = function(society, value) return remove(Compat.named(society, true), value) end,
+    RemoveMoney = function(society, value) return remove(Compat.named(society, false), value) end,
     AddTransaction = function(id, data)
         if type(data) ~= 'table' then return false end
         local incoming = data.receiver_identifier == id
