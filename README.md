@@ -242,17 +242,6 @@ In `/bankconfig` → Logs:
 - **ox_lib logger**: also send logs to ox_lib's logger (Datadog/Fivemanage/etc.; set the `ox:logger` convar).
 - **Flag amounts from**: withdrawals and transfers at or above this amount are marked ⚠.
 
-## Developing the UI
-
-The UI is React + Vite in `web/`. It builds into `web/dist/`, which is what FiveM loads, so you only need this if you change the UI.
-
-```bash
-cd web
-npm install
-npm run dev     # opens in the browser with mock data and a dev toolbar
-npm run build   # rebuilds web/dist/
-```
-
 ## Credits
 
 - Made by **LWK Development**.
@@ -261,7 +250,7 @@ npm run build   # rebuilds web/dist/
 
 ## Support
 
-Free support is available in the LWK Development Discord. Please include your framework, inventory, target, and any F8/server console errors.
+Free support is available in the [LWK Development Discord](https://discord.gg/99EuV7rzSp). Please include your framework, inventory, target, and any F8/server console errors.
 
 ## License
 
