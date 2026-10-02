@@ -1,38 +1,47 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import type { Card } from '../nui';
 import type { CardScene } from './card-scene';
+import { cardStage } from './card-stage';
 
 export interface Card3DHandle {
   insert: () => Promise<void>;
 }
 
-/** Click to flip, move the pointer to tilt. three.js is fetched on first mount only. */
+/** Click to flip, move the pointer to tilt. Borrows the card canvas prebuilt at startup. */
 export const Card3D = forwardRef<Card3DHandle, { card: Card; bankName: string; accent: string; running?: boolean }>(function Card3D({ card, bankName, accent, running = true }, ref) {
-  const canvas = useRef<HTMLCanvasElement>(null);
+  const holder = useRef<HTMLDivElement>(null);
   const scene = useRef<CardScene | null>(null);
   // Repaint when the card or anything printed on it changes (e.g. a renewal moves the expiry).
   const face = `${card.id}:${card.expiresAt}:${card.holder}`;
   const shown = useRef(face);
   const [failed, setFailed] = useState(false);
-  const runningRef = useRef(running);
-  runningRef.current = running;
+  const latest = useRef({ card, bankName, accent, running });
+  latest.current = { card, bankName, accent, running };
 
   useEffect(() => {
     let dead = false;
-    import('./card-scene')
-      .then(({ createCardScene }) => createCardScene(canvas.current!, card, bankName, accent))
+    let canvas: HTMLCanvasElement | null = null;
+    cardStage()
       .then((s) => {
-        if (dead) return s.dispose();
-        scene.current = s;
-        s.setRunning(runningRef.current);
+        if (dead) return;
+        const l = latest.current;
+        canvas = s.canvas;
+        canvas.onclick = () => s.scene.flip();
+        canvas.setAttribute('role', 'img');
+        holder.current!.appendChild(canvas);
+        s.scene.show(l.card, l.bankName, l.accent);
+        s.scene.setRunning(l.running);
+        shown.current = `${l.card.id}:${l.card.expiresAt}:${l.card.holder}`;
+        scene.current = s.scene;
       })
       .catch(() => !dead && setFailed(true));
     return () => {
       dead = true;
-      scene.current?.dispose();
+      // Hand the canvas back: stop drawing and detach. The GL context stays alive for next time.
+      scene.current?.setRunning(false);
+      canvas?.remove();
       scene.current = null;
     };
-    // The scene is created once; card changes go through setCard below.
   }, []);
 
   useEffect(() => {
@@ -44,18 +53,20 @@ export const Card3D = forwardRef<Card3DHandle, { card: Card; bankName: string; a
     shown.current = face;
   }, [face, card]);
 
+  useEffect(() => {
+    holder.current?.querySelector('canvas')?.setAttribute('aria-label', `${card.tier} card ending ${card.last4}. Click to flip.`);
+  });
+
   useImperativeHandle(ref, () => ({ insert: () => scene.current?.insert() ?? Promise.resolve() }), []);
 
   return (
-    <div className="card3d">
-      {failed ? (
+    <div className="card3d" ref={holder}>
+      {failed && (
         // WebGL unavailable: flat fallback so the ATM still works.
         <div className={`card-flat tier-${card.tier}`}>
           <span>{bankName}</span>
           <span className="mono">•••• {card.last4}</span>
         </div>
-      ) : (
-        <canvas ref={canvas} onClick={() => scene.current?.flip()} aria-label={`${card.tier} card ending ${card.last4}. Click to flip.`} role="img" />
       )}
     </div>
   );

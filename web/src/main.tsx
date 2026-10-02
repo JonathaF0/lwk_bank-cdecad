@@ -10,9 +10,16 @@ import './styles/receipt.css';
 import { App } from './App';
 import { fetchNui, isBrowser, setMockHandler } from './nui';
 import { preloadSounds } from './sound';
+import { cardStage } from './atm/card-stage';
 
 // Decode recordings at startup so even the very first open sound is the real one.
 preloadSounds();
+
+// Build the 3D card (three.js, WebGL context, lighting, shaders) while the player is still
+// loading into the server, so the first time a card appears there's nothing left to build.
+const warmCard = () => cardStage().catch(() => {});
+if ('requestIdleCallback' in window) requestIdleCallback(warmCard, { timeout: 5000 });
+else setTimeout(warmCard, 1000);
 
 // Browser dev only: fake Lua with mock data. Dropped from the production build.
 if (import.meta.env.DEV && isBrowser) {

@@ -4,8 +4,8 @@ import gsap from 'gsap';
 import type { Card } from '../nui';
 import { cardExpiry } from '../logic';
 
-/* One WebGL card. Lives only while the ATM card step is mounted: dispose() kills the
- * render loop and the GL context so the game gets its GPU time back. */
+/* One WebGL card, built once while the UI loads (see card-stage.ts) and reused by the
+ * Cards tab and the ATM. It only renders while one of them is on screen. */
 
 const W = 3.37; // ISO card, 85.6 x 54 mm
 const H = 2.125;
@@ -162,6 +162,9 @@ function drawFace(card: Card, bankName: string, accent: string, back: boolean) {
 }
 
 export interface CardScene {
+  /** Put a card on screen instantly (new branding, pose reset) and play the entrance. */
+  show(card: Card, bankName: string, accent: string): void;
+  /** Swap to another card with a quick turn. */
   setCard(card: Card): void;
   /** Pause/resume rendering, e.g. while the Cards tab is out of view. */
   setRunning(on: boolean): void;
@@ -213,12 +216,13 @@ export async function createCardScene(canvas: HTMLCanvasElement, card: Card, ban
   pivot.add(body);
   scene.add(pivot);
 
+  let brand = { bankName, accent };
   const applyCard = (c: Card) => {
     const t = TIERS[c.tier];
     for (const [mesh, isBack] of [[front, false], [back, true]] as const) {
       const m = mesh.material as THREE.MeshPhysicalMaterial;
       m.map?.dispose();
-      m.map = drawFace(c, bankName, accent, isBack);
+      m.map = drawFace(c, brand.bankName, brand.accent, isBack);
       m.metalness = t.metal;
       m.needsUpdate = true;
     }
@@ -272,11 +276,21 @@ export async function createCardScene(canvas: HTMLCanvasElement, card: Card, ban
   };
   loop();
 
-  // Entrance: card spins up into place.
-  gsap.from(body.rotation, { y: -Math.PI * 1.5, duration: 1.6, ease: 'expo.out' });
-  gsap.from(body.position, { y: -1.5, duration: 1.4, ease: 'expo.out' });
-
   return {
+    show(c, name, color) {
+      brand = { bankName: name, accent: color };
+      // Reset whatever the last screen left behind (e.g. the card inside the ATM slot).
+      gsap.killTweensOf([body.rotation, body.position, flipState]);
+      floating = true;
+      aim.x = aim.y = tilt.x = tilt.y = flipState.y = 0;
+      body.rotation.set(0, 0, 0);
+      body.position.set(0, 0, 0);
+      resize(); // the canvas was just attached to a new screen
+      applyCard(c);
+      // Entrance: card spins up into place.
+      gsap.from(body.rotation, { y: -Math.PI * 1.5, duration: 1.6, ease: 'expo.out' });
+      gsap.from(body.position, { y: -1.5, duration: 1.4, ease: 'expo.out' });
+    },
     setRunning(on) {
       if (on === running) return;
       running = on;

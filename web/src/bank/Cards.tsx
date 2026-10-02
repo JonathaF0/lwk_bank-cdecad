@@ -20,17 +20,14 @@ export function Cards({ active, accountId, setAccountId }: SectionProps) {
     if (card && card.id !== cardId) setCardId(card.id);
   }, [card, cardId]);
 
-  // Building the WebGL card is the expensive part (renderer, lighting, shaders), so do it
-  // once: when the bank is idle after opening, or right after the carousel lands here.
-  // After that it stays alive and only pauses while another tab is in front.
+  // The 3D card itself is prebuilt at startup (card-stage.ts); mounting it only paints the
+  // card face. Do that right away on a first visit, otherwise quietly after the bank opens,
+  // then keep it and just pause it while another tab is in front.
   const [ready, setReady] = useState(false);
   useEffect(() => {
     if (ready) return;
     const go = () => setReady(true);
-    if (active) {
-      const id = setTimeout(go, 700);
-      return () => clearTimeout(id);
-    }
+    if (active) return go();
     // Not during the ~1.5s opening animation.
     let idle = 0;
     const wait = setTimeout(() => (idle = requestIdleCallback(go, { timeout: 3000 })), 2000);
